@@ -49,13 +49,12 @@ serial.listPorts() -> array
 
  Returns:
  * an array of available serial ports where each entry in the array is a table describing a serial port.  The table for each index will contain the following keys:
-
-   * baseName   - the name of the serial port
-   * calloutDevice - the path to the callout or "active" device for the serial port
-   * dialinDevice  - the path to the dialin or "listening" device for the serial port
-   * bsdType       - the type of serial port device
-   * ttyDevice
-   * ttySuffix
+    * baseName      - the name of the serial port
+    * calloutDevice - the path to the callout or "active" device for the serial port
+    * dialinDevice  - the path to the dialin or "listening" device for the serial port
+    * bsdType       - the type of serial port device
+    * ttyDevice
+    * ttySuffix
 
  Notes:
  * For most purposes, you should probably use the calloutDevice when performing serial communications.  By convention, the callout device is expected to block other listeners, which `hs._asm.serial:open` does, while the dialin device is intended to be left non-blocking until something actually occurs (this allows Unix like systems to allow you to use a serial port even if a getty process is listening for an incoming login, for example)
@@ -160,7 +159,7 @@ serial:dataBits([bits]) -> serialPortObject | integer
   * the serial port object if a bit size is specified, otherwise, the current setting
 
  Notes:
-  * the data bit size does not include any parity (if any) or stop bits.
+  * the data bit size does not include the parity (if any) or stop bits.
 
 ~~~lua
 serial:stopBits([bits]) -> serialPortObject | integer
@@ -174,7 +173,7 @@ serial:stopBits([bits]) -> serialPortObject | integer
   * the serial port object if a bit size is specified, otherwise, the current setting
 
 ~~~lua
-serial:parity([type]) -> serialPortObject | integer
+serial:parity([type]) -> serialPortObject | string
 ~~~
 * Get or set the serial port's parity type.
 
