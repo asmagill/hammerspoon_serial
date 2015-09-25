@@ -49,6 +49,7 @@ serial.listPorts() -> array
 
  Returns:
  * an array of available serial ports where each entry in the array is a table describing a serial port.  The table for each index will contain the following keys:
+
    * baseName   - the name of the serial port
    * calloutDevice - the path to the callout or "active" device for the serial port
    * dialinDevice  - the path to the dialin or "listening" device for the serial port
