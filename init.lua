@@ -61,20 +61,20 @@ local expandFlags = function(value, from)
 end
 -- Public interface ------------------------------------------------------
 
-module.attributeFlags.iflag = _makeConstantsTable(module.attributeFlags.iflag)
-module.attributeFlags.oflag = _makeConstantsTable(module.attributeFlags.oflag)
-module.attributeFlags.cflag = _makeConstantsTable(module.attributeFlags.cflag)
-module.attributeFlags.lflag = _makeConstantsTable(module.attributeFlags.lflag)
-module.attributeFlags.cc = _makeConstantsTable(module.attributeFlags.cc)
+module.attributeFlags.iflag =  _makeConstantsTable(module.attributeFlags.iflag)
+module.attributeFlags.oflag =  _makeConstantsTable(module.attributeFlags.oflag)
+module.attributeFlags.cflag =  _makeConstantsTable(module.attributeFlags.cflag)
+module.attributeFlags.lflag =  _makeConstantsTable(module.attributeFlags.lflag)
+module.attributeFlags.cc =     _makeConstantsTable(module.attributeFlags.cc)
 module.attributeFlags.action = _makeConstantsTable(module.attributeFlags.action)
-module.attributeFlags.baud = _makeConstantsTable(module.attributeFlags.baud)
+module.attributeFlags.baud =   _makeConstantsTable(module.attributeFlags.baud)
 
 --- hs._asm.serial:unoReset([delay]) -> serialPortObject
 --- Method
 --- Triggers the reset process for an Arduino UNO (and similar) by setting the DTR high for `delay` microseconds and then pulling it low.
 ---
 --- Parameters:
----  * delay - an optional parameter indicating how long in microseconds the DTR should be held high.  Defaults to 100000 microseconds.
+---  * delay - an optional parameter indicating how long in microseconds the DTR should be held high.  Defaults to 100000 microseconds (1/10 of a second).
 ---
 --- Returns:
 ---  * the serial port object
@@ -99,7 +99,7 @@ end
 ---   * the serial port object if a bit size is specified, otherwise, the current setting
 ---
 --- Notes:
----   * the data bit size does not include any parity (if any) or stop bits.
+---   * the data bit size does not include the parity (if any) or stop bits.
 internal.dataBits = function(self, bits)
     local attributes = self:getAttributes()
 
@@ -142,7 +142,7 @@ internal.stopBits = function(self, bits)
     end
 end
 
---- hs._asm.serial:parity([type]) -> serialPortObject | integer
+--- hs._asm.serial:parity([type]) -> serialPortObject | string
 --- Method
 --- Get or set the serial port's parity type.
 ---
@@ -242,9 +242,50 @@ internal.hardwareFlowControl = function(self, flow)
     end
 end
 
+--- hs._asm.serial:expandIflag() -> string
+--- Method
+--- Returns which input mode flags are set for the serial port.
+---
+--- Parameters:
+---  * None
+---
+--- Returns:
+---  * a string with the names of the input mode flags which are set for the serial port
 internal.expandIflag = function(self) return expandFlags(self:getAttributes().iflag, module.attributeFlags.iflag) end
+
+--- hs._asm.serial:expandOflag() -> string
+--- Method
+--- Returns which output mode flags are set for the serial port.
+---
+--- Parameters:
+---  * None
+---
+--- Returns:
+---  * a string with the names of the output mode flags which are set for the serial port
 internal.expandOflag = function(self) return expandFlags(self:getAttributes().oflag, module.attributeFlags.oflag) end
+
+--- hs._asm.serial:expandCflag() -> string
+--- Method
+--- Returns which control mode flags are set for the serial port.
+---
+--- Parameters:
+---  * None
+---
+--- Returns:
+---  * a string with the names of the control mode flags which are set for the serial port
 internal.expandCflag = function(self) return expandFlags(self:getAttributes().cflag, module.attributeFlags.cflag) end
+
+--- hs._asm.serial:expandLflag() -> string
+--- Method
+--- Returns which local mode flags are set for the serial port.
+---
+--- Parameters:
+---  * None
+---
+--- Returns:
+---  * a string with the names of the local mode flags which are set for the serial port
+ Notes:
+   * The names are consistent with those found in `hs._asm.serial.attributeFlags`
 internal.expandLflag = function(self) return expandFlags(self:getAttributes().lflag, module.attributeFlags.lflag) end
 
 -- Return Module Object --------------------------------------------------

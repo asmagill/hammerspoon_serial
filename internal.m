@@ -338,7 +338,7 @@ int refTable ;
 ///
 /// Returns:
 ///  * an array of available serial ports where each entry in the array is a table describing a serial port.  The table for each index will contain the following keys:
-///    * baseName   - the name of the serial port
+///    * baseName      - the name of the serial port
 ///    * calloutDevice - the path to the callout or "active" device for the serial port
 ///    * dialinDevice  - the path to the dialin or "listening" device for the serial port
 ///    * bsdType       - the type of serial port device
@@ -346,7 +346,7 @@ int refTable ;
 ///    * ttySuffix
 ///
 /// Notes:
-///  * For most purposes, it is most likely that you want to use the calloutDevice when performing serial communications as it blocks other processes (other than root) from using the serial device while Hammerspoon is using it.
+///  * For most purposes, you should probably use the calloutDevice when performing serial communications.  By convention, the callout device is expected to block other listeners, which `hs._asm.serial:open` does, while the dialin device is intended to be left non-blocking until something actually occurs (this allows Unix like systems to allow you to use a serial port even if a getty process is listening for an incoming login, for example)
 static int serial_listPorts(lua_State *L) {
     [[LuaSkin shared] checkArgs:LS_TBREAK] ;
 
@@ -394,7 +394,7 @@ static int serial_listPorts(lua_State *L) {
 ///  * the serial port object
 ///
 /// Notes:
-///  * This constructor does not open the serial port.  It just creates a reference to the serial port for use within Hammerspoon.
+///  * This constructor does not open the serial port for communications.  It momentarily opens the port in a non-blocking manner just long enough to aquire the serial ports current/default attributes, but then closes it and creates a reference to the serial port for use within Hammerspoon.  This behavior may change, as I suspect it may cause problems with some Arduino devices with auto-reset enabled.
 ///  * In most cases, you will want to use the calloutDevice for the serial port (see `hs._asm.serial.listPorts`)
 static int serial_port(lua_State *L) {
     [[LuaSkin shared] checkArgs:LS_TSTRING, LS_TBREAK] ;
@@ -527,6 +527,7 @@ static int serial_incomingDataCallback(lua_State *L) {
 ///  * the serial port object
 ///
 /// Notes:
+///  * If no callback function is defined, a notification is posted via `hs.showError` when a lost serial port connection is detected.
 ///  * This function will not be called if the port exits normally; for example because of calling `hs._asm.serial:close` or due to garbage collection (Hammerspoon reloading or termination)
 static int serial_lostPortCallback(lua_State *L) {
     [[LuaSkin shared] checkArgs:LS_TUSERDATA, USERDATA_TAG, LS_TFUNCTION | LS_TNIL, LS_TBREAK] ;

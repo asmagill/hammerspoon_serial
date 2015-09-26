@@ -128,6 +128,7 @@ serial:lostPortCallback(fn) -> serialPortObject
  * the serial port object
 
  Notes:
+ * If no callback function is defined, a notification is posted via `hs.showError` when a lost serial port connection is detected.
  * This function will not be called if the port exits normally; for example because of calling `hs._asm.serial:close` or due to garbage collection (Hammerspoon reloading or termination)
 
 #### Basic Configuration Methods
