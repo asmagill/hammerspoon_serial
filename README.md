@@ -17,9 +17,14 @@ For these and other reasons, I am not planning for this to be included in the Ha
 That said, it is basically working for me now, and I intend to keep tweaking it as I can, so you are more than welcome to use it out as well and let me know what works, what doesn't, post suggestions or patches, etc.
 
 #### Installation
-This relies on some features not yet in the released version of Hammerspoon.  They should be included in Hammerspoon 0.9.41, at which time I will try and include a binary which can be downloaded and installed.  In the mean time, if you are running a current development build of Hammerspoon, you can opt for the manual method:
+A binary release has been provided at https://github.com/asmagill/hammerspoon_serial/releases and can be installed by downloading the archive and issuing the following commands:
 
-To install this manually, do the following (or if you want the latest and greatest):
+~~~sh
+$ cd ~/.hammerspoon
+$ unzip ~/Downloads/serial-vX.Y.zip
+~~~
+
+If this doesn't work for you, or you want to install this manually (or you want the latest and greatest), do the following:
 
 ~~~sh
 $ git clone https://www.github.com/asmagill/hammerspoon_serial.git serial
