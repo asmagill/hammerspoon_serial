@@ -284,8 +284,8 @@ internal.expandCflag = function(self) return expandFlags(self:getAttributes().cf
 ---
 --- Returns:
 ---  * a string with the names of the local mode flags which are set for the serial port
- Notes:
-   * The names are consistent with those found in `hs._asm.serial.attributeFlags`
+--- Notes:
+---   * The names are consistent with those found in `hs._asm.serial.attributeFlags`
 internal.expandLflag = function(self) return expandFlags(self:getAttributes().lflag, module.attributeFlags.lflag) end
 
 -- Return Module Object --------------------------------------------------

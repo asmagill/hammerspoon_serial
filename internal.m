@@ -2,10 +2,17 @@
 
 // TODO:
 //  * add support for setting bits, stop bits, parity, and flow control
-//    do i still have devices to test this with?
-//   add class and selectors for actual reading
-//   best way to let lua know data is waiting?
-//   test with reseting uno and leonardo
+//    do i still have devices (modems, etc) to test this with?
+//  * add class and selectors for actual reading
+//  * best way to let lua know data is waiting?
+//    test with reseting uno and leonardo
+
+//  - need to capture thread so while loops can check that it is in fact still running, could block otherwise
+// way to terminate thread if it won't quit? Specifically, if VMIN and VTIME and changed by user, could
+// block close otherwise... Should check if changing them while read blocking on thread works.
+
+// port command does reset uno; knew open would, hoped port wouldn't, so need to figure out good
+// defaults some other way...
 
 #import <Cocoa/Cocoa.h>
 // #import <Carbon/Carbon.h>
@@ -37,6 +44,7 @@ int refTable ;
 @property            int            callbackFunction ;
 @property            int            lostPortFunction ;
 @property (readonly) BOOL           bufferChanging ;
+@property            NSThread       *myChildThread ;
 @end
 
 
@@ -174,7 +182,7 @@ int refTable ;
 
         int theDescriptor = _serialFileDescriptor ;
         _serialFileDescriptor = -1 ;
-        while(_readThreadRunning) {} ;
+        while(_readThreadRunning) { if (![_myChildThread isExecuting]) _readThreadRunning = NO ; } ;
 
 
         // return the serial port to its normal upright position...
@@ -199,7 +207,12 @@ int refTable ;
         return nil ;
     }
 
-    while(_bufferChanging) {} ; _bufferChanging = YES ;
+    while(_bufferChanging) {
+        if (![_myChildThread isExecuting]) {
+            _readThreadRunning = NO ;
+            _bufferChanging = NO ;
+        }
+    } ; _bufferChanging = YES ;
         if ([_incomingData length] > 0) {
             bufferCopy = [_incomingData subdataWithRange:NSMakeRange(0,MIN(chunkSize, [_incomingData length]))] ;
             if (chunkSize < [_incomingData length]) {
@@ -217,7 +230,12 @@ int refTable ;
 
 - (NSData *)getDataFromBuffer {
     NSData *bufferCopy ;
-    while(_bufferChanging) {} ; _bufferChanging = YES ;
+    while(_bufferChanging) {
+        if (![_myChildThread isExecuting]) {
+            _readThreadRunning = NO ;
+            _bufferChanging = NO ;
+        }
+    } ; _bufferChanging = YES ;
         if ([_incomingData length] > 0) {
             bufferCopy    = [_incomingData copy] ;
             _incomingData = [[NSMutableData alloc] init] ;
@@ -229,7 +247,12 @@ int refTable ;
 }
 
 - (void)flushBuffer {
-    while(_bufferChanging) {} ; _bufferChanging = YES ;
+    while(_bufferChanging) {
+        if (![_myChildThread isExecuting]) {
+            _readThreadRunning = NO ;
+            _bufferChanging = NO ;
+        }
+    } ; _bufferChanging = YES ;
         _incomingData = [[NSMutableData alloc] init] ;
     _bufferChanging = NO ;
 }
@@ -237,7 +260,12 @@ int refTable ;
 - (size_t)bufferSize {
     size_t bufferSize = 0 ;
 
-    while(_bufferChanging) {} ; _bufferChanging = YES ;
+    while(_bufferChanging) {
+        if (![_myChildThread isExecuting]) {
+            _readThreadRunning = NO ;
+            _bufferChanging = NO ;
+        }
+    } ; _bufferChanging = YES ;
         bufferSize = [_incomingData length] ;
     _bufferChanging = NO ;
 
@@ -284,6 +312,7 @@ int refTable ;
     @autoreleasepool {
         // mark that the thread is running
         _readThreadRunning = YES;
+        _myChildThread = [NSThread currentThread] ;
 
         const int     BUFFER_SIZE = 512;
         unsigned char byte_buffer[BUFFER_SIZE]; // buffer for holding incoming data
