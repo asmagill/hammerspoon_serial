@@ -348,13 +348,13 @@ serial:getAttributes() -> termiosTable
 
  Returns:
  * a table containing the following keys:
-   * iflag  - bit flag representing the input modes for the termios structure
-   * oflag  - bit flag representing the output modes for the termios structure
-   * cflag  - bit flag representing the control modes for the termios structure
-   * lflag  - bit flag representing the local modes for the termios structure
-   * ispeed - input speed
-   * ospeed - output speed
-   * cc     - array of control characters which have special meaning under certain conditions
+    * iflag  - bit flag representing the input modes for the termios structure
+    * oflag  - bit flag representing the output modes for the termios structure
+    * cflag  - bit flag representing the control modes for the termios structure
+    * lflag  - bit flag representing the local modes for the termios structure
+    * ispeed - input speed
+    * ospeed - output speed
+    * cc     - array of control characters which have special meaning under certain conditions
 
  Notes:
  * If the serial port is currently open, this method will query the port for its current settings; otherwise, the settings which are to be applied when the port is opened with `hs._asm.serial:open` are provided.
@@ -367,13 +367,13 @@ serial:setAttributes(termiosTable, action) -> serialPortObject
 
  Parameters:
  * termiosTable - a table containing the following keys:
-   * iflag  - bit flag representing the input modes for the termios structure
-   * oflag  - bit flag representing the output modes for the termios structure
-   * cflag  - bit flag representing the control modes for the termios structure
-   * lflag  - bit flag representing the local modes for the termios structure
-   * ispeed - input speed
-   * ospeed - output speed
-   * cc     - array of control characters which have special meaning under certain conditions
+    * iflag  - bit flag representing the input modes for the termios structure
+    * oflag  - bit flag representing the output modes for the termios structure
+    * cflag  - bit flag representing the control modes for the termios structure
+    * lflag  - bit flag representing the local modes for the termios structure
+    * ispeed - input speed
+    * ospeed - output speed
+    * cc     - array of control characters which have special meaning under certain conditions
  * action - an action flag from `hs._asm.serial.attributeFlags.action` specifying when to apply the new termios values
 
  Returns:
