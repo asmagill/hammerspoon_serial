@@ -6,51 +6,21 @@
 ---
 --- This module is largely based on code found at http://playground.arduino.cc/Interfacing/Cocoa and https://github.com/armadsen/ORSSerialPort.
 
-local module   = require("hs._asm.serial.internal")
-local internal = hs.getObjectMetatable("hs._asm.serial")
+local USERDATA_TAG = "hs._asm.serial"
+
+local module   = require(USERDATA_TAG .. ".internal")
+local internal = hs.getObjectMetatable(USERDATA_TAG)
 local timer    = require("hs.timer")
 
--- private variables and methods -----------------------------------------
-
-local _kMetaTable = {}
-_kMetaTable._k = {}
-_kMetaTable.__index = function(obj, key)
-        if _kMetaTable._k[obj] then
-            if _kMetaTable._k[obj][key] then
-                return _kMetaTable._k[obj][key]
-            else
-                for k,v in pairs(_kMetaTable._k[obj]) do
-                    if v == key then return k end
-                end
-            end
-        end
-        return nil
+local basePath = package.searchpath(USERDATA_TAG, package.path)
+if basePath then
+    basePath = basePath:match("^(.+)/init.lua$")
+    if require"hs.fs".attributes(basePath .. "/docs.json") then
+        require"hs.doc".registerJSONFile(basePath .. "/docs.json")
     end
-_kMetaTable.__newindex = function(obj, key, value)
-        error("attempt to modify a table of constants",2)
-        return nil
-    end
-_kMetaTable.__pairs = function(obj) return pairs(_kMetaTable._k[obj]) end
-_kMetaTable.__tostring = function(obj)
-        local result = ""
-        if _kMetaTable._k[obj] then
-            local width = 0
-            for k,v in pairs(_kMetaTable._k[obj]) do width = width < #k and #k or width end
-            for k,v in require("hs.fnutils").sortByKeys(_kMetaTable._k[obj]) do
-                result = result..string.format("%-"..tostring(width).."s %s\n", k, tostring(v))
-            end
-        else
-            result = "constants table missing"
-        end
-        return result
-    end
-_kMetaTable.__metatable = _kMetaTable -- go ahead and look, but don't unset this
-
-local _makeConstantsTable = function(theTable)
-    local results = setmetatable({}, _kMetaTable)
-    _kMetaTable._k[results] = theTable
-    return results
 end
+
+-- private variables and methods -----------------------------------------
 
 local expandFlags = function(value, from)
     local results = {}
@@ -61,13 +31,14 @@ local expandFlags = function(value, from)
 end
 -- Public interface ------------------------------------------------------
 
-module.attributeFlags.iflag =  _makeConstantsTable(module.attributeFlags.iflag)
-module.attributeFlags.oflag =  _makeConstantsTable(module.attributeFlags.oflag)
-module.attributeFlags.cflag =  _makeConstantsTable(module.attributeFlags.cflag)
-module.attributeFlags.lflag =  _makeConstantsTable(module.attributeFlags.lflag)
-module.attributeFlags.cc =     _makeConstantsTable(module.attributeFlags.cc)
-module.attributeFlags.action = _makeConstantsTable(module.attributeFlags.action)
-module.attributeFlags.baud =   _makeConstantsTable(module.attributeFlags.baud)
+module.attributeFlags =  ls.makeConstantsTable(module.attributeFlags)
+-- module.attributeFlags.iflag =  ls.makeConstantsTable(module.attributeFlags.iflag)
+-- module.attributeFlags.oflag =  ls.makeConstantsTable(module.attributeFlags.oflag)
+-- module.attributeFlags.cflag =  ls.makeConstantsTable(module.attributeFlags.cflag)
+-- module.attributeFlags.lflag =  ls.makeConstantsTable(module.attributeFlags.lflag)
+-- module.attributeFlags.cc =     ls.makeConstantsTable(module.attributeFlags.cc)
+-- module.attributeFlags.action = ls.makeConstantsTable(module.attributeFlags.action)
+-- module.attributeFlags.baud =   ls.makeConstantsTable(module.attributeFlags.baud)
 
 --- hs._asm.serial:unoReset([delay]) -> serialPortObject
 --- Method
@@ -107,7 +78,7 @@ internal.dataBits = function(self, bits)
         return ((attributes.cflag & module.attributeFlags.cflag.CSIZE) >> 8) + 5
     else
         assert(type(bits) == "number" and bits >= 5 and bits <= 8 and bits == math.tointeger(bits),
-            "hs._asm.serial:dataBits - number of data bits must be an integer between 5 and 8 inclusive")
+            USERDATA_TAG .. ":dataBits - number of data bits must be an integer between 5 and 8 inclusive")
 
         attributes.cflag = attributes.cflag & ~module.attributeFlags.cflag.CSIZE
         attributes.cflag = attributes.cflag | module.attributeFlags.cflag["CS"..tostring(bits)]
@@ -131,7 +102,7 @@ internal.stopBits = function(self, bits)
         return ((attributes.cflag & module.attributeFlags.cflag.CSTOPB) >> 10) + 1
     else
         assert(type(bits) == "number" and bits >= 1 and bits <= 2 and bits == math.tointeger(bits),
-            "hs._asm.serial:stopBits - number of data bits must be an integer between 1 and 2 inclusive")
+            USERDATA_TAG .. ":stopBits - number of data bits must be an integer between 1 and 2 inclusive")
 
         if bits == 1 then
             attributes.cflag = attributes.cflag & ~module.attributeFlags.cflag.CSTOPB
@@ -165,7 +136,7 @@ internal.parity = function(self, parity)
         end
     else
         assert(type(parity) == "string",
-            "hs._asm.serial:parity - parity must be specified as a string")
+            USERDATA_TAG .. ":parity - parity must be specified as a string")
 
         if parity == "N" or parity == "None" then
             attributes.cflag = attributes.cflag & ~module.attributeFlags.cflag.PARENB
@@ -176,7 +147,7 @@ internal.parity = function(self, parity)
             attributes.cflag = attributes.cflag | module.attributeFlags.cflag.PARENB
             attributes.cflag = attributes.cflag | module.attributeFlags.cflag.PARODD
         else
-            error("hs._asm.serial:parity - parity must be N(one), E(ven), or O(dd)", 2)
+            error(USERDATA_TAG .. ":parity - parity must be N(one), E(ven), or O(dd)", 2)
         end
         return self:setAttributes(attributes, module.attributeFlags.action.TCSAFLUSH)
     end
@@ -201,7 +172,7 @@ internal.softwareFlowControl = function(self, flow)
         return (attributes.iflag & module.attributeFlags.iflag.IXON ~= 0) and
                (attributes.iflag & module.attributeFlags.iflag.IXOFF ~= 0)
     else
-        assert(type(flow) == "boolean", "hs._asm.serial:softwareFlowControl requires a boolean parameter")
+        assert(type(flow) == "boolean", USERDATA_TAG .. ":softwareFlowControl requires a boolean parameter")
 
         if flow then
             attributes.iflag = attributes.iflag |  (module.attributeFlags.iflag.IXON | module.attributeFlags.iflag.IXOFF)
@@ -231,7 +202,7 @@ internal.hardwareFlowControl = function(self, flow)
     if flow == nil then
         return (attributes.cflag & module.attributeFlags.cflag.CRTSCTS ~= 0)
     else
-        assert(type(flow) == "boolean", "hs._asm.serial:softwareFlowControl requires a boolean parameter")
+        assert(type(flow) == "boolean", USERDATA_TAG .. ":softwareFlowControl requires a boolean parameter")
 
         if flow then
             attributes.cflag = attributes.cflag | module.attributeFlags.cflag.CRTSCTS

@@ -1,0 +1,1358 @@
+[
+  {
+    "Constant" : [
+      {
+        "desc" : "A table containing TERMIOS flags for advanced serial control.  This is provided for internal use and for reference if you need to manipulate the serial attributes directly with `hs._asm.serial:getAttributes` and `hs._asm.serial:setAttributes`.  This should not be required for most serial port requirements.",
+        "stripped_doc" : [
+          "A table containing TERMIOS flags for advanced serial control.  This is provided for internal use and for reference if you need to manipulate the serial attributes directly with `hs._asm.serial:getAttributes` and `hs._asm.serial:setAttributes`.  This should not be required for most serial port requirements.",
+          "",
+          "Contents:",
+          " * iflag  - constants which apply to termios input modes",
+          " * oflag  - constants which apply to termios output modes",
+          " * cflag  - constants which apply to termios control modes",
+          " * lflag  - constants which apply to termios local modes",
+          " * cc     - index labels for the `cc` array in the termios control character structure",
+          " * action - flags indicating when changes to the termios structure provided to `hs._asm.serial:setAttributes` should be applied.",
+          " * baud   - predefined baud rate labels",
+          ""
+        ],
+        "parameters" : [
+
+        ],
+        "doc" : "A table containing TERMIOS flags for advanced serial control.  This is provided for internal use and for reference if you need to manipulate the serial attributes directly with `hs._asm.serial:getAttributes` and `hs._asm.serial:setAttributes`.  This should not be required for most serial port requirements.\n\nContents:\n * iflag  - constants which apply to termios input modes\n * oflag  - constants which apply to termios output modes\n * cflag  - constants which apply to termios control modes\n * lflag  - constants which apply to termios local modes\n * cc     - index labels for the `cc` array in the termios control character structure\n * action - flags indicating when changes to the termios structure provided to `hs._asm.serial:setAttributes` should be applied.\n * baud   - predefined baud rate labels\n\nNotes:\n * Not all defined modes in iflag, oflag, cflag, and lflag are valid for all serial devices or drivers.\n * Lua tables start at index 1 rather than 0; the index labels in cc reflect this (i.e. they are each 1 greater than the value defined in \/usr\/include\/sys\/termios.h).\n * The list of baud rates is provided as a reference.  The baud rate is actually set via ioctl with the IOSSIOSPEED request to allow a wider range of values than termios directly supports.  Note that not all baud rates are valid for all serial devices or drivers.",
+        "notes" : [
+          " * Not all defined modes in iflag, oflag, cflag, and lflag are valid for all serial devices or drivers.",
+          " * Lua tables start at index 1 rather than 0; the index labels in cc reflect this (i.e. they are each 1 greater than the value defined in \/usr\/include\/sys\/termios.h).",
+          " * The list of baud rates is provided as a reference.  The baud rate is actually set via ioctl with the IOSSIOSPEED request to allow a wider range of values than termios directly supports.  Note that not all baud rates are valid for all serial devices or drivers."
+        ],
+        "signature" : "hs._asm.serial.attributeFlags",
+        "type" : "Constant",
+        "returns" : [
+
+        ],
+        "def" : "hs._asm.serial.attributeFlags",
+        "name" : "attributeFlags"
+      }
+    ],
+    "submodules" : [
+
+    ],
+    "Function" : [
+      {
+        "desc" : "List the available serial ports for the system",
+        "stripped_doc" : [
+          "List the available serial ports for the system",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "List the available serial ports for the system\n\nParameters:\n * None\n\nReturns:\n * an array of available serial ports where each entry in the array is a table describing a serial port.  The table for each index will contain the following keys:\n   * baseName      - the name of the serial port\n   * calloutDevice - the path to the callout or \"active\" device for the serial port\n   * dialinDevice  - the path to the dialin or \"listening\" device for the serial port\n   * bsdType       - the type of serial port device\n   * ttyDevice\n   * ttySuffix\n\nNotes:\n * For most purposes, you should probably use the calloutDevice when performing serial communications.  By convention, the callout device is expected to block other listeners, which `hs._asm.serial:open` does, while the dialin device is intended to be left non-blocking until something actually occurs (this allows Unix like systems to allow you to use a serial port even if a getty process is listening for an incoming login, for example)",
+        "notes" : [
+          " * For most purposes, you should probably use the calloutDevice when performing serial communications.  By convention, the callout device is expected to block other listeners, which `hs._asm.serial:open` does, while the dialin device is intended to be left non-blocking until something actually occurs (this allows Unix like systems to allow you to use a serial port even if a getty process is listening for an incoming login, for example)"
+        ],
+        "signature" : "hs._asm.serial.listPorts() -> array",
+        "type" : "Function",
+        "returns" : [
+          " * an array of available serial ports where each entry in the array is a table describing a serial port.  The table for each index will contain the following keys:",
+          "   * baseName      - the name of the serial port",
+          "   * calloutDevice - the path to the callout or \"active\" device for the serial port",
+          "   * dialinDevice  - the path to the dialin or \"listening\" device for the serial port",
+          "   * bsdType       - the type of serial port device",
+          "   * ttyDevice",
+          "   * ttySuffix",
+          ""
+        ],
+        "def" : "hs._asm.serial.listPorts() -> array",
+        "name" : "listPorts"
+      }
+    ],
+    "Variable" : [
+
+    ],
+    "stripped_doc" : [
+
+    ],
+    "Deprecated" : [
+
+    ],
+    "type" : "Module",
+    "desc" : "Basic serial port support for Hammerspoon",
+    "Constructor" : [
+      {
+        "desc" : "Create a Hammerspoon reference to the selected serial port and sets the initial attributes to raw at 9600 baud.",
+        "stripped_doc" : [
+          "Create a Hammerspoon reference to the selected serial port and sets the initial attributes to raw at 9600 baud.",
+          ""
+        ],
+        "parameters" : [
+          " * path - the bsd style path to the device node which represents the serial device you wish to use.",
+          ""
+        ],
+        "doc" : "Create a Hammerspoon reference to the selected serial port and sets the initial attributes to raw at 9600 baud.\n\nParameters:\n * path - the bsd style path to the device node which represents the serial device you wish to use.\n\nReturns:\n * the serial port object\n\nNotes:\n * This constructor does not open the serial port for communications.  It momentarily opens the port in a non-blocking manner just long enough to aquire the serial ports current\/default attributes, but then closes it and creates a reference to the serial port for use within Hammerspoon.  This behavior may change, as I suspect it may cause problems with some Arduino devices with auto-reset enabled.\n * In most cases, you will want to use the calloutDevice for the serial port (see `hs._asm.serial.listPorts`)",
+        "notes" : [
+          " * This constructor does not open the serial port for communications.  It momentarily opens the port in a non-blocking manner just long enough to aquire the serial ports current\/default attributes, but then closes it and creates a reference to the serial port for use within Hammerspoon.  This behavior may change, as I suspect it may cause problems with some Arduino devices with auto-reset enabled.",
+          " * In most cases, you will want to use the calloutDevice for the serial port (see `hs._asm.serial.listPorts`)"
+        ],
+        "signature" : "hs._asm.serial.port(path) -> serialPortObject",
+        "type" : "Constructor",
+        "returns" : [
+          " * the serial port object",
+          ""
+        ],
+        "def" : "hs._asm.serial.port(path) -> serialPortObject",
+        "name" : "port"
+      },
+      {
+        "desc" : "Open the serial port for communication and apply the most recently provided settings and baud rate.",
+        "stripped_doc" : [
+          "Open the serial port for communication and apply the most recently provided settings and baud rate.",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Open the serial port for communication and apply the most recently provided settings and baud rate.\n\nParameters:\n * None\n\nReturns:\n * the serial port object\n\nNotes:\n * If the serial port is already open, this method does nothing.",
+        "notes" : [
+          " * If the serial port is already open, this method does nothing."
+        ],
+        "signature" : "hs._asm.serial:open() -> serialPortObject",
+        "type" : "Constructor",
+        "returns" : [
+          " * the serial port object",
+          ""
+        ],
+        "def" : "hs._asm.serial:open() -> serialPortObject",
+        "name" : "open"
+      }
+    ],
+    "doc" : "Basic serial port support for Hammerspoon\n\nA module to facilitate serial port communications within Hammerspoon.  The motivation behind this module is to facilitate communications with Arduino devices communicating via a USB or Bluetooth Serial Port adapter but should work with any device which shows up under OS X as a serial port device.\n\nThis module is largely based on code found at http:\/\/playground.arduino.cc\/Interfacing\/Cocoa and https:\/\/github.com\/armadsen\/ORSSerialPort.",
+    "Method" : [
+      {
+        "desc" : "Triggers the reset process for an Arduino UNO (and similar) by setting the DTR high for `delay` microseconds and then pulling it low.",
+        "stripped_doc" : [
+          "Triggers the reset process for an Arduino UNO (and similar) by setting the DTR high for `delay` microseconds and then pulling it low.",
+          ""
+        ],
+        "parameters" : [
+          " * delay - an optional parameter indicating how long in microseconds the DTR should be held high.  Defaults to 100000 microseconds (1\/10 of a second).",
+          ""
+        ],
+        "doc" : "Triggers the reset process for an Arduino UNO (and similar) by setting the DTR high for `delay` microseconds and then pulling it low.\n\nParameters:\n * delay - an optional parameter indicating how long in microseconds the DTR should be held high.  Defaults to 100000 microseconds (1\/10 of a second).\n\nReturns:\n * the serial port object\n\nNotes:\n * the delay is performed via `hs.timer.usleep` and is blocking, so it should be kept as short as necessary.  My experience is that 100000 microseconds is sufficient, but the parameter is provided if circumstances require another value.",
+        "notes" : [
+          " * the delay is performed via `hs.timer.usleep` and is blocking, so it should be kept as short as necessary.  My experience is that 100000 microseconds is sufficient, but the parameter is provided if circumstances require another value."
+        ],
+        "signature" : "hs._asm.serial:unoReset([delay]) -> serialPortObject",
+        "type" : "Method",
+        "returns" : [
+          " * the serial port object",
+          ""
+        ],
+        "def" : "hs._asm.serial:unoReset([delay]) -> serialPortObject",
+        "name" : "unoReset"
+      },
+      {
+        "desc" : "Get or set the serial port's character data size in bits.",
+        "stripped_doc" : [
+          "Get or set the serial port's character data size in bits.",
+          ""
+        ],
+        "parameters" : [
+          "  * bits - an optional integer between 5 and 8 inclusive specifying the serial port's character data size in bits.",
+          ""
+        ],
+        "doc" : "Get or set the serial port's character data size in bits.\n\nParameters:\n  * bits - an optional integer between 5 and 8 inclusive specifying the serial port's character data size in bits.\n\nReturns:\n  * the serial port object if a bit size is specified, otherwise, the current setting\n\nNotes:\n  * the data bit size does not include the parity (if any) or stop bits.",
+        "notes" : [
+          "  * the data bit size does not include the parity (if any) or stop bits."
+        ],
+        "signature" : "hs._asm.serial:dataBits([bits]) -> serialPortObject | integer",
+        "type" : "Method",
+        "returns" : [
+          "  * the serial port object if a bit size is specified, otherwise, the current setting",
+          ""
+        ],
+        "def" : "hs._asm.serial:dataBits([bits]) -> serialPortObject | integer",
+        "name" : "dataBits"
+      },
+      {
+        "desc" : "Get or set the serial port's number of stop bits.",
+        "stripped_doc" : [
+          "Get or set the serial port's number of stop bits.",
+          ""
+        ],
+        "parameters" : [
+          "  * bits - an optional integer between 1 and 2 inclusive specifying the serial port's number of stop bits.",
+          ""
+        ],
+        "doc" : "Get or set the serial port's number of stop bits.\n\nParameters:\n  * bits - an optional integer between 1 and 2 inclusive specifying the serial port's number of stop bits.\n\nReturns:\n  * the serial port object if a bit size is specified, otherwise, the current setting",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:stopBits([bits]) -> serialPortObject | integer",
+        "type" : "Method",
+        "returns" : [
+          "  * the serial port object if a bit size is specified, otherwise, the current setting"
+        ],
+        "def" : "hs._asm.serial:stopBits([bits]) -> serialPortObject | integer",
+        "name" : "stopBits"
+      },
+      {
+        "desc" : "Get or set the serial port's parity type.",
+        "stripped_doc" : [
+          "Get or set the serial port's parity type.",
+          ""
+        ],
+        "parameters" : [
+          "  * type - an optional string indicating the type of parity to use for error detection.  Recognized values are:",
+          "    * N or None - No parity: do not use parity for error detection",
+          "    * E or Even - Use even parity",
+          "    * O or Odd  - Use odd parity",
+          ""
+        ],
+        "doc" : "Get or set the serial port's parity type.\n\nParameters:\n  * type - an optional string indicating the type of parity to use for error detection.  Recognized values are:\n    * N or None - No parity: do not use parity for error detection\n    * E or Even - Use even parity\n    * O or Odd  - Use odd parity\n\nReturns:\n  * the serial port object if a parity setting is specified, otherwise, the current setting",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:parity([type]) -> serialPortObject | string",
+        "type" : "Method",
+        "returns" : [
+          "  * the serial port object if a parity setting is specified, otherwise, the current setting"
+        ],
+        "def" : "hs._asm.serial:parity([type]) -> serialPortObject | string",
+        "name" : "parity"
+      },
+      {
+        "desc" : "Get or set whether or not software flow control is enable for the serial port",
+        "stripped_doc" : [
+          "Get or set whether or not software flow control is enable for the serial port",
+          ""
+        ],
+        "parameters" : [
+          " * an optional boolean parameter indicating if software flow control should be enabled for the serial port",
+          ""
+        ],
+        "doc" : "Get or set whether or not software flow control is enable for the serial port\n\nParameters:\n * an optional boolean parameter indicating if software flow control should be enabled for the serial port\n\nReturns:\n * if a value was provided, then the serial port object is returned; otherwise the current value is returned\n\nNotes:\n * This method turns software flow control fully on or fully off (i.e. bi-directional).  If you have manipulated the serial port attributes directly, it is possible that software flow control may be only partially enabled - using this method to check on flow control status (i.e. without providing a boolean parameter) will report this condition as false since at least one direction of communication doesn not have software flow control enabled.",
+        "notes" : [
+          " * This method turns software flow control fully on or fully off (i.e. bi-directional).  If you have manipulated the serial port attributes directly, it is possible that software flow control may be only partially enabled - using this method to check on flow control status (i.e. without providing a boolean parameter) will report this condition as false since at least one direction of communication doesn not have software flow control enabled."
+        ],
+        "signature" : "hs._asm.serial:softwareFlowControl([state]) -> serialPortObject | boolean",
+        "type" : "Method",
+        "returns" : [
+          " * if a value was provided, then the serial port object is returned; otherwise the current value is returned",
+          ""
+        ],
+        "def" : "hs._asm.serial:softwareFlowControl([state]) -> serialPortObject | boolean",
+        "name" : "softwareFlowControl"
+      },
+      {
+        "desc" : "Get or set whether or not hardware (RTSCTS) flow control is enable for the serial port",
+        "stripped_doc" : [
+          "Get or set whether or not hardware (RTSCTS) flow control is enable for the serial port",
+          ""
+        ],
+        "parameters" : [
+          " * an optional boolean parameter indicating if hardware flow control should be enabled for the serial port",
+          ""
+        ],
+        "doc" : "Get or set whether or not hardware (RTSCTS) flow control is enable for the serial port\n\nParameters:\n * an optional boolean parameter indicating if hardware flow control should be enabled for the serial port\n\nReturns:\n * if a value was provided, then the serial port object is returned; otherwise the current value is returned\n\nNotes:\n * This method only manages RTSCTS hardware flow control as this is the most commonly supported.  By adjusting the serial port attributes directly, DTRDSR hardware flow control and DCDOutputFlowControl may also be available if your device or driver support them.\n * This method turns hardware flow control fully on or fully off (i.e. bi-directional).  If you have manipulated the serial port attributes directly, it is possible that hardware flow control may be only partially enabled - using this method to check on flow control status (i.e. without providing a boolean parameter) will report this condition as false since at least one direction of communication doesn not have hardware flow control enabled.",
+        "notes" : [
+          " * This method only manages RTSCTS hardware flow control as this is the most commonly supported.  By adjusting the serial port attributes directly, DTRDSR hardware flow control and DCDOutputFlowControl may also be available if your device or driver support them.",
+          " * This method turns hardware flow control fully on or fully off (i.e. bi-directional).  If you have manipulated the serial port attributes directly, it is possible that hardware flow control may be only partially enabled - using this method to check on flow control status (i.e. without providing a boolean parameter) will report this condition as false since at least one direction of communication doesn not have hardware flow control enabled."
+        ],
+        "signature" : "hs._asm.serial:hardwareFlowControl([state]) -> serialPortObject | boolean",
+        "type" : "Method",
+        "returns" : [
+          " * if a value was provided, then the serial port object is returned; otherwise the current value is returned",
+          ""
+        ],
+        "def" : "hs._asm.serial:hardwareFlowControl([state]) -> serialPortObject | boolean",
+        "name" : "hardwareFlowControl"
+      },
+      {
+        "desc" : "Returns which input mode flags are set for the serial port.",
+        "stripped_doc" : [
+          "Returns which input mode flags are set for the serial port.",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Returns which input mode flags are set for the serial port.\n\nParameters:\n * None\n\nReturns:\n * a string with the names of the input mode flags which are set for the serial port",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:expandIflag() -> string",
+        "type" : "Method",
+        "returns" : [
+          " * a string with the names of the input mode flags which are set for the serial port"
+        ],
+        "def" : "hs._asm.serial:expandIflag() -> string",
+        "name" : "expandIflag"
+      },
+      {
+        "desc" : "Returns which output mode flags are set for the serial port.",
+        "stripped_doc" : [
+          "Returns which output mode flags are set for the serial port.",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Returns which output mode flags are set for the serial port.\n\nParameters:\n * None\n\nReturns:\n * a string with the names of the output mode flags which are set for the serial port",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:expandOflag() -> string",
+        "type" : "Method",
+        "returns" : [
+          " * a string with the names of the output mode flags which are set for the serial port"
+        ],
+        "def" : "hs._asm.serial:expandOflag() -> string",
+        "name" : "expandOflag"
+      },
+      {
+        "desc" : "Returns which control mode flags are set for the serial port.",
+        "stripped_doc" : [
+          "Returns which control mode flags are set for the serial port.",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Returns which control mode flags are set for the serial port.\n\nParameters:\n * None\n\nReturns:\n * a string with the names of the control mode flags which are set for the serial port",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:expandCflag() -> string",
+        "type" : "Method",
+        "returns" : [
+          " * a string with the names of the control mode flags which are set for the serial port"
+        ],
+        "def" : "hs._asm.serial:expandCflag() -> string",
+        "name" : "expandCflag"
+      },
+      {
+        "desc" : "Returns which local mode flags are set for the serial port.",
+        "stripped_doc" : [
+          "Returns which local mode flags are set for the serial port.",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Returns which local mode flags are set for the serial port.\n\nParameters:\n * None\n\nReturns:\n * a string with the names of the local mode flags which are set for the serial port\nNotes:\n  * The names are consistent with those found in `hs._asm.serial.attributeFlags`",
+        "notes" : [
+          "  * The names are consistent with those found in `hs._asm.serial.attributeFlags`"
+        ],
+        "signature" : "hs._asm.serial:expandLflag() -> string",
+        "type" : "Method",
+        "returns" : [
+          " * a string with the names of the local mode flags which are set for the serial port"
+        ],
+        "def" : "hs._asm.serial:expandLflag() -> string",
+        "name" : "expandLflag"
+      },
+      {
+        "desc" : "Close and release the serial port",
+        "stripped_doc" : [
+          "Close and release the serial port",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Close and release the serial port\n\nParameters:\n * None\n\nReturns:\n * None\n\nNotes:\n * If the port is already closed, this method does nothing.\n * This method is automatically called during garbage collection (most notably when your Hammerspoon configuration is reloaded or Hammerspoon is quit.)",
+        "notes" : [
+          " * If the port is already closed, this method does nothing.",
+          " * This method is automatically called during garbage collection (most notably when your Hammerspoon configuration is reloaded or Hammerspoon is quit.)"
+        ],
+        "signature" : "hs._asm.serial:close() -> nil",
+        "type" : "Method",
+        "returns" : [
+          " * None",
+          ""
+        ],
+        "def" : "hs._asm.serial:close() -> nil",
+        "name" : "close"
+      },
+      {
+        "desc" : "Returns a boolean value indicating whether or not the serial port is currently open",
+        "stripped_doc" : [
+          "Returns a boolean value indicating whether or not the serial port is currently open",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Returns a boolean value indicating whether or not the serial port is currently open\n\nParameters:\n * None\n\nReturns:\n * True if the serial port is currently open or false if it is not.",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:isOpen() -> boolean",
+        "type" : "Method",
+        "returns" : [
+          " * True if the serial port is currently open or false if it is not."
+        ],
+        "def" : "hs._asm.serial:isOpen() -> boolean",
+        "name" : "isOpen"
+      },
+      {
+        "desc" : "Set or clear a callback function for incoming data",
+        "stripped_doc" : [
+          "Set or clear a callback function for incoming data",
+          ""
+        ],
+        "parameters" : [
+          " * fn - a function to callback when incoming data is detected.  If an explicit nil value is given, remove any existing callback function.  The function should expect two parameters, the serialPortObject and the incoming buffer contents as a lua string, and return one result: True if the callback should remain active for additional incoming data or false if it should not.",
+          ""
+        ],
+        "doc" : "Set or clear a callback function for incoming data\n\nParameters:\n * fn - a function to callback when incoming data is detected.  If an explicit nil value is given, remove any existing callback function.  The function should expect two parameters, the serialPortObject and the incoming buffer contents as a lua string, and return one result: True if the callback should remain active for additional incoming data or false if it should not.\n\nReturns:\n * the serial port object\n\nNotes:\n * Data passed to the callback function is not guaranteed to be valid UTF8 or even complete.  You may need to perform additional reads with `hs._asm.serial:readBuffer` or cache data for an additional callback to get the full results.  See also `hs._asm.serial:bufferSize`.\n\n * This does not enable the callback function, it merely attaches it to this serial port.  See `hs._asm.serial:enableCallback` for more information.\n * If the callback function is currently enabled and this method is used to assign a new callback function, there is a small window where data may be buffered, but will not invoke a callback.  This buffered data will be included in the next callback invocation or can be manually retrieved with `hs._asm.serial:readBuffer`.\n * If the callback function is currently enabled and this method is used to remove the existing callback, the enable state will be set to false.",
+        "notes" : [
+          " * Data passed to the callback function is not guaranteed to be valid UTF8 or even complete.  You may need to perform additional reads with `hs._asm.serial:readBuffer` or cache data for an additional callback to get the full results.  See also `hs._asm.serial:bufferSize`.",
+          "",
+          " * This does not enable the callback function, it merely attaches it to this serial port.  See `hs._asm.serial:enableCallback` for more information.",
+          " * If the callback function is currently enabled and this method is used to assign a new callback function, there is a small window where data may be buffered, but will not invoke a callback.  This buffered data will be included in the next callback invocation or can be manually retrieved with `hs._asm.serial:readBuffer`.",
+          " * If the callback function is currently enabled and this method is used to remove the existing callback, the enable state will be set to false."
+        ],
+        "signature" : "hs._asm.serial:incomingDataCallback(fn) -> serialPortObject",
+        "type" : "Method",
+        "returns" : [
+          " * the serial port object",
+          ""
+        ],
+        "def" : "hs._asm.serial:incomingDataCallback(fn) -> serialPortObject",
+        "name" : "incomingDataCallback"
+      },
+      {
+        "desc" : "Set or clear a callback function for a lost serial port connection",
+        "stripped_doc" : [
+          "Set or clear a callback function for a lost serial port connection",
+          ""
+        ],
+        "parameters" : [
+          " * fn - a function to callback when the serial port is unexpectedly lost.  If an explicit nil value is given, remove any existing callback function.  The function should expect two parameters, the serialPortObject and a string containing the error message (if any). The function should not return a value.",
+          ""
+        ],
+        "doc" : "Set or clear a callback function for a lost serial port connection\n\nParameters:\n * fn - a function to callback when the serial port is unexpectedly lost.  If an explicit nil value is given, remove any existing callback function.  The function should expect two parameters, the serialPortObject and a string containing the error message (if any). The function should not return a value.\n\nReturns:\n * the serial port object\n\nNotes:\n * If no callback function is defined, a notification is posted via `hs.showError` when a lost serial port connection is detected.\n * This function will not be called if the port exits normally; for example because of calling `hs._asm.serial:close` or due to garbage collection (Hammerspoon reloading or termination)",
+        "notes" : [
+          " * If no callback function is defined, a notification is posted via `hs.showError` when a lost serial port connection is detected.",
+          " * This function will not be called if the port exits normally; for example because of calling `hs._asm.serial:close` or due to garbage collection (Hammerspoon reloading or termination)"
+        ],
+        "signature" : "hs._asm.serial:lostPortCallback(fn) -> serialPortObject",
+        "type" : "Method",
+        "returns" : [
+          " * the serial port object",
+          ""
+        ],
+        "def" : "hs._asm.serial:lostPortCallback(fn) -> serialPortObject",
+        "name" : "lostPortCallback"
+      },
+      {
+        "desc" : "Get or set whether or not a callback should occur when incoming data is detected from the serial port",
+        "stripped_doc" : [
+          "Get or set whether or not a callback should occur when incoming data is detected from the serial port",
+          ""
+        ],
+        "parameters" : [
+          " * flag - an optional boolean flag indicating whether or not incoming data should trigger the registered callback function.",
+          ""
+        ],
+        "doc" : "Get or set whether or not a callback should occur when incoming data is detected from the serial port\n\nParameters:\n * flag - an optional boolean flag indicating whether or not incoming data should trigger the registered callback function.\n\nReturns:\n * If a value is specified, then this method returns the serial port object.  Otherwise this method returns the current value.",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:enableCallback([flag]) -> serialPortObject | state",
+        "type" : "Method",
+        "returns" : [
+          " * If a value is specified, then this method returns the serial port object.  Otherwise this method returns the current value."
+        ],
+        "def" : "hs._asm.serial:enableCallback([flag]) -> serialPortObject | state",
+        "name" : "enableCallback"
+      },
+      {
+        "desc" : "Dumps all data currently waiting in the incoming data buffer.",
+        "stripped_doc" : [
+          "Dumps all data currently waiting in the incoming data buffer.",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Dumps all data currently waiting in the incoming data buffer.\n\nParameters:\n * None\n\nReturns:\n * the serial port object",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:flushBuffer() -> serialPortObject",
+        "type" : "Method",
+        "returns" : [
+          " * the serial port object"
+        ],
+        "def" : "hs._asm.serial:flushBuffer() -> serialPortObject",
+        "name" : "flushBuffer"
+      },
+      {
+        "desc" : "Returns the number of bytes currently in the serial port's receive buffer.",
+        "stripped_doc" : [
+          "Returns the number of bytes currently in the serial port's receive buffer.",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Returns the number of bytes currently in the serial port's receive buffer.\n\nParameters:\n * None\n\nReturns:\n * the number of bytes currently in the receive buffer",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:bufferSize() -> integer",
+        "type" : "Method",
+        "returns" : [
+          " * the number of bytes currently in the receive buffer"
+        ],
+        "def" : "hs._asm.serial:bufferSize() -> integer",
+        "name" : "bufferSize"
+      },
+      {
+        "desc" : "Write the specified data to the serial port.",
+        "stripped_doc" : [
+          "Write the specified data to the serial port.",
+          ""
+        ],
+        "parameters" : [
+          " * data - the data to send to the serial port.",
+          ""
+        ],
+        "doc" : "Write the specified data to the serial port.\n\nParameters:\n * data - the data to send to the serial port.\n\nReturns:\n * the serial port object\n\nNotes:\n* A number is treated as a string (i.e. 123 will be sent as \"123\").  To send an actual byte value of 123, use `string.char(123)` as the data.",
+        "notes" : [
+          "* A number is treated as a string (i.e. 123 will be sent as \"123\").  To send an actual byte value of 123, use `string.char(123)` as the data."
+        ],
+        "signature" : "hs._asm.serial:write(data) -> serialPortObject",
+        "type" : "Method",
+        "returns" : [
+          " * the serial port object",
+          ""
+        ],
+        "def" : "hs._asm.serial:write(data) -> serialPortObject",
+        "name" : "write"
+      },
+      {
+        "desc" : "Reads the incoming serial buffer.  If bytes is specified, only read up to that many bytes; otherwise everything currently in the incoming buffer is read.",
+        "stripped_doc" : [
+          "Reads the incoming serial buffer.  If bytes is specified, only read up to that many bytes; otherwise everything currently in the incoming buffer is read.",
+          ""
+        ],
+        "parameters" : [
+          " * bytes - an optional integer defining how many bytes to read.  If it is not present, the entire buffer is returned.",
+          ""
+        ],
+        "doc" : "Reads the incoming serial buffer.  If bytes is specified, only read up to that many bytes; otherwise everything currently in the incoming buffer is read.\n\nParameters:\n * bytes - an optional integer defining how many bytes to read.  If it is not present, the entire buffer is returned.\n\nReturns:\n * a string containing the specified contents of the read buffer\n\nNotes:\n * Data returned by this method is not guaranteed to be valid UTF8 or even complete.  You may need to perform additional reads or cache data for a later check to get full results.  See also `hs._asm.serial:bufferSize`.\n\n * This method will clear the current incoming buffer of the data it returns.  Cache the data if you need to keep a record.\n * This method will return nil if the buffer is currently empty.\n\n * This method can be called even if the serial port is closed (even if closed unexpectedly), though no new data will arrive unless the port is re-opened.",
+        "notes" : [
+          " * Data returned by this method is not guaranteed to be valid UTF8 or even complete.  You may need to perform additional reads or cache data for a later check to get full results.  See also `hs._asm.serial:bufferSize`.",
+          "",
+          " * This method will clear the current incoming buffer of the data it returns.  Cache the data if you need to keep a record.",
+          " * This method will return nil if the buffer is currently empty.",
+          "",
+          " * This method can be called even if the serial port is closed (even if closed unexpectedly), though no new data will arrive unless the port is re-opened."
+        ],
+        "signature" : "hs._asm.serial:readBuffer([bytes]) -> string",
+        "type" : "Method",
+        "returns" : [
+          " * a string containing the specified contents of the read buffer",
+          ""
+        ],
+        "def" : "hs._asm.serial:readBuffer([bytes]) -> string",
+        "name" : "readBuffer"
+      },
+      {
+        "desc" : "Set the DTR high or low",
+        "stripped_doc" : [
+          "Set the DTR high or low",
+          ""
+        ],
+        "parameters" : [
+          " * state - a boolean indicating if the DTR should be set high (true) or low (false)",
+          ""
+        ],
+        "doc" : "Set the DTR high or low\n\nParameters:\n * state - a boolean indicating if the DTR should be set high (true) or low (false)\n\nReturns:\n * the serial port object",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:DTR(state) -> serialPortObject",
+        "type" : "Method",
+        "returns" : [
+          " * the serial port object"
+        ],
+        "def" : "hs._asm.serial:DTR(state) -> serialPortObject",
+        "name" : "DTR"
+      },
+      {
+        "desc" : "Change the current baud rate for the serial port",
+        "stripped_doc" : [
+          "Change the current baud rate for the serial port",
+          ""
+        ],
+        "parameters" : [
+          " * rate - the new baud rate to set for the serial port",
+          ""
+        ],
+        "doc" : "Change the current baud rate for the serial port\n\nParameters:\n * rate - the new baud rate to set for the serial port\n\nReturns:\n * the serial port object\n\nNotes:\n * if the serial port is currently open, this method attempts to change the baud rate immediately; otherwise the change will be applied when the serial port is opened with `hs._asm.serial:open`.\n * need to find out if this resets the serial port on error like the example suggests but I can't find documented anywhere",
+        "notes" : [
+          " * if the serial port is currently open, this method attempts to change the baud rate immediately; otherwise the change will be applied when the serial port is opened with `hs._asm.serial:open`.",
+          " * need to find out if this resets the serial port on error like the example suggests but I can't find documented anywhere"
+        ],
+        "signature" : "hs._asm.serial:baud(rate) -> serialPortObject",
+        "type" : "Method",
+        "returns" : [
+          " * the serial port object",
+          ""
+        ],
+        "def" : "hs._asm.serial:baud(rate) -> serialPortObject",
+        "name" : "baud"
+      },
+      {
+        "desc" : "Get the serial port's termios structure and return it in table form.  This is used internally and provided for advanced serial port manipulation.  It is not expected that you will require this method for most serial port usage requirements.",
+        "stripped_doc" : [
+          "Get the serial port's termios structure and return it in table form.  This is used internally and provided for advanced serial port manipulation.  It is not expected that you will require this method for most serial port usage requirements.",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Get the serial port's termios structure and return it in table form.  This is used internally and provided for advanced serial port manipulation.  It is not expected that you will require this method for most serial port usage requirements.\n\nParameters:\n * None\n\nReturns:\n * a table containing the following keys:\n   * iflag  - bit flag representing the input modes for the termios structure\n   * oflag  - bit flag representing the output modes for the termios structure\n   * cflag  - bit flag representing the control modes for the termios structure\n   * lflag  - bit flag representing the local modes for the termios structure\n   * ispeed - input speed\n   * ospeed - output speed\n   * cc     - array of control characters which have special meaning under certain conditions\n\nNotes:\n * If the serial port is currently open, this method will query the port for its current settings; otherwise, the settings which are to be applied when the port is opened with `hs._asm.serial:open` are provided.\n * The baud rate for the serial port is set via ioctl with the IOSSIOSPEED request to allow a wider range of values than termios directly supports.  `ispeed` and `ospeed` may not be an accurate measure of the actual baud rate currently in effect.",
+        "notes" : [
+          " * If the serial port is currently open, this method will query the port for its current settings; otherwise, the settings which are to be applied when the port is opened with `hs._asm.serial:open` are provided.",
+          " * The baud rate for the serial port is set via ioctl with the IOSSIOSPEED request to allow a wider range of values than termios directly supports.  `ispeed` and `ospeed` may not be an accurate measure of the actual baud rate currently in effect."
+        ],
+        "signature" : "hs._asm.serial:getAttributes() -> termiosTable",
+        "type" : "Method",
+        "returns" : [
+          " * a table containing the following keys:",
+          "   * iflag  - bit flag representing the input modes for the termios structure",
+          "   * oflag  - bit flag representing the output modes for the termios structure",
+          "   * cflag  - bit flag representing the control modes for the termios structure",
+          "   * lflag  - bit flag representing the local modes for the termios structure",
+          "   * ispeed - input speed",
+          "   * ospeed - output speed",
+          "   * cc     - array of control characters which have special meaning under certain conditions",
+          ""
+        ],
+        "def" : "hs._asm.serial:getAttributes() -> termiosTable",
+        "name" : "getAttributes"
+      },
+      {
+        "desc" : "Set the serial port's termios structure To the values specified in the provided table.  This is used internally and provided for advanced serial port manipulation.  It is not expected that you will require this method for most serial port usage requirements.",
+        "stripped_doc" : [
+          "Set the serial port's termios structure To the values specified in the provided table.  This is used internally and provided for advanced serial port manipulation.  It is not expected that you will require this method for most serial port usage requirements.",
+          ""
+        ],
+        "parameters" : [
+          " * termiosTable - a table containing the following keys:",
+          "   * iflag  - bit flag representing the input modes for the termios structure",
+          "   * oflag  - bit flag representing the output modes for the termios structure",
+          "   * cflag  - bit flag representing the control modes for the termios structure",
+          "   * lflag  - bit flag representing the local modes for the termios structure",
+          "   * ispeed - input speed",
+          "   * ospeed - output speed",
+          "   * cc     - array of control characters which have special meaning under certain conditions",
+          " * action - an action flag from `hs._asm.serial.attributeFlags.action` specifying when to apply the new termios values",
+          ""
+        ],
+        "doc" : "Set the serial port's termios structure To the values specified in the provided table.  This is used internally and provided for advanced serial port manipulation.  It is not expected that you will require this method for most serial port usage requirements.\n\nParameters:\n * termiosTable - a table containing the following keys:\n   * iflag  - bit flag representing the input modes for the termios structure\n   * oflag  - bit flag representing the output modes for the termios structure\n   * cflag  - bit flag representing the control modes for the termios structure\n   * lflag  - bit flag representing the local modes for the termios structure\n   * ispeed - input speed\n   * ospeed - output speed\n   * cc     - array of control characters which have special meaning under certain conditions\n * action - an action flag from `hs._asm.serial.attributeFlags.action` specifying when to apply the new termios values\n\nReturns:\n * the serial port object\n\nNotes:\n * If the serial port is currently open, this method will try to apply the settings immediately; otherwise the settings will be saved until the serial port is opened with `hs._asm.serial:open`.\n * Not all possible modes in iflag, oflag, cflag, and lflag are valid for all serial devices or drivers.\n * The ispeed and ospeed values should not be adjusted -- use the `hs._asm.serial:baud` method to set the serial port baud rate as it allows for a wider range of speeds than termios directly supports.\n * It is expected that this method will be called after making changes to the results provided by `hs._asm.serial:getAttributes`.",
+        "notes" : [
+          " * If the serial port is currently open, this method will try to apply the settings immediately; otherwise the settings will be saved until the serial port is opened with `hs._asm.serial:open`.",
+          " * Not all possible modes in iflag, oflag, cflag, and lflag are valid for all serial devices or drivers.",
+          " * The ispeed and ospeed values should not be adjusted -- use the `hs._asm.serial:baud` method to set the serial port baud rate as it allows for a wider range of speeds than termios directly supports.",
+          " * It is expected that this method will be called after making changes to the results provided by `hs._asm.serial:getAttributes`."
+        ],
+        "signature" : "hs._asm.serial:setAttributes(termiosTable, action) -> serialPortObject",
+        "type" : "Method",
+        "returns" : [
+          " * the serial port object",
+          ""
+        ],
+        "def" : "hs._asm.serial:setAttributes(termiosTable, action) -> serialPortObject",
+        "name" : "setAttributes"
+      }
+    ],
+    "Field" : [
+
+    ],
+    "Command" : [
+
+    ],
+    "items" : [
+      {
+        "desc" : "A table containing TERMIOS flags for advanced serial control.  This is provided for internal use and for reference if you need to manipulate the serial attributes directly with `hs._asm.serial:getAttributes` and `hs._asm.serial:setAttributes`.  This should not be required for most serial port requirements.",
+        "stripped_doc" : [
+          "A table containing TERMIOS flags for advanced serial control.  This is provided for internal use and for reference if you need to manipulate the serial attributes directly with `hs._asm.serial:getAttributes` and `hs._asm.serial:setAttributes`.  This should not be required for most serial port requirements.",
+          "",
+          "Contents:",
+          " * iflag  - constants which apply to termios input modes",
+          " * oflag  - constants which apply to termios output modes",
+          " * cflag  - constants which apply to termios control modes",
+          " * lflag  - constants which apply to termios local modes",
+          " * cc     - index labels for the `cc` array in the termios control character structure",
+          " * action - flags indicating when changes to the termios structure provided to `hs._asm.serial:setAttributes` should be applied.",
+          " * baud   - predefined baud rate labels",
+          ""
+        ],
+        "parameters" : [
+
+        ],
+        "doc" : "A table containing TERMIOS flags for advanced serial control.  This is provided for internal use and for reference if you need to manipulate the serial attributes directly with `hs._asm.serial:getAttributes` and `hs._asm.serial:setAttributes`.  This should not be required for most serial port requirements.\n\nContents:\n * iflag  - constants which apply to termios input modes\n * oflag  - constants which apply to termios output modes\n * cflag  - constants which apply to termios control modes\n * lflag  - constants which apply to termios local modes\n * cc     - index labels for the `cc` array in the termios control character structure\n * action - flags indicating when changes to the termios structure provided to `hs._asm.serial:setAttributes` should be applied.\n * baud   - predefined baud rate labels\n\nNotes:\n * Not all defined modes in iflag, oflag, cflag, and lflag are valid for all serial devices or drivers.\n * Lua tables start at index 1 rather than 0; the index labels in cc reflect this (i.e. they are each 1 greater than the value defined in \/usr\/include\/sys\/termios.h).\n * The list of baud rates is provided as a reference.  The baud rate is actually set via ioctl with the IOSSIOSPEED request to allow a wider range of values than termios directly supports.  Note that not all baud rates are valid for all serial devices or drivers.",
+        "notes" : [
+          " * Not all defined modes in iflag, oflag, cflag, and lflag are valid for all serial devices or drivers.",
+          " * Lua tables start at index 1 rather than 0; the index labels in cc reflect this (i.e. they are each 1 greater than the value defined in \/usr\/include\/sys\/termios.h).",
+          " * The list of baud rates is provided as a reference.  The baud rate is actually set via ioctl with the IOSSIOSPEED request to allow a wider range of values than termios directly supports.  Note that not all baud rates are valid for all serial devices or drivers."
+        ],
+        "signature" : "hs._asm.serial.attributeFlags",
+        "type" : "Constant",
+        "returns" : [
+
+        ],
+        "def" : "hs._asm.serial.attributeFlags",
+        "name" : "attributeFlags"
+      },
+      {
+        "desc" : "List the available serial ports for the system",
+        "stripped_doc" : [
+          "List the available serial ports for the system",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "List the available serial ports for the system\n\nParameters:\n * None\n\nReturns:\n * an array of available serial ports where each entry in the array is a table describing a serial port.  The table for each index will contain the following keys:\n   * baseName      - the name of the serial port\n   * calloutDevice - the path to the callout or \"active\" device for the serial port\n   * dialinDevice  - the path to the dialin or \"listening\" device for the serial port\n   * bsdType       - the type of serial port device\n   * ttyDevice\n   * ttySuffix\n\nNotes:\n * For most purposes, you should probably use the calloutDevice when performing serial communications.  By convention, the callout device is expected to block other listeners, which `hs._asm.serial:open` does, while the dialin device is intended to be left non-blocking until something actually occurs (this allows Unix like systems to allow you to use a serial port even if a getty process is listening for an incoming login, for example)",
+        "notes" : [
+          " * For most purposes, you should probably use the calloutDevice when performing serial communications.  By convention, the callout device is expected to block other listeners, which `hs._asm.serial:open` does, while the dialin device is intended to be left non-blocking until something actually occurs (this allows Unix like systems to allow you to use a serial port even if a getty process is listening for an incoming login, for example)"
+        ],
+        "signature" : "hs._asm.serial.listPorts() -> array",
+        "type" : "Function",
+        "returns" : [
+          " * an array of available serial ports where each entry in the array is a table describing a serial port.  The table for each index will contain the following keys:",
+          "   * baseName      - the name of the serial port",
+          "   * calloutDevice - the path to the callout or \"active\" device for the serial port",
+          "   * dialinDevice  - the path to the dialin or \"listening\" device for the serial port",
+          "   * bsdType       - the type of serial port device",
+          "   * ttyDevice",
+          "   * ttySuffix",
+          ""
+        ],
+        "def" : "hs._asm.serial.listPorts() -> array",
+        "name" : "listPorts"
+      },
+      {
+        "desc" : "Open the serial port for communication and apply the most recently provided settings and baud rate.",
+        "stripped_doc" : [
+          "Open the serial port for communication and apply the most recently provided settings and baud rate.",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Open the serial port for communication and apply the most recently provided settings and baud rate.\n\nParameters:\n * None\n\nReturns:\n * the serial port object\n\nNotes:\n * If the serial port is already open, this method does nothing.",
+        "notes" : [
+          " * If the serial port is already open, this method does nothing."
+        ],
+        "signature" : "hs._asm.serial:open() -> serialPortObject",
+        "type" : "Constructor",
+        "returns" : [
+          " * the serial port object",
+          ""
+        ],
+        "def" : "hs._asm.serial:open() -> serialPortObject",
+        "name" : "open"
+      },
+      {
+        "desc" : "Create a Hammerspoon reference to the selected serial port and sets the initial attributes to raw at 9600 baud.",
+        "stripped_doc" : [
+          "Create a Hammerspoon reference to the selected serial port and sets the initial attributes to raw at 9600 baud.",
+          ""
+        ],
+        "parameters" : [
+          " * path - the bsd style path to the device node which represents the serial device you wish to use.",
+          ""
+        ],
+        "doc" : "Create a Hammerspoon reference to the selected serial port and sets the initial attributes to raw at 9600 baud.\n\nParameters:\n * path - the bsd style path to the device node which represents the serial device you wish to use.\n\nReturns:\n * the serial port object\n\nNotes:\n * This constructor does not open the serial port for communications.  It momentarily opens the port in a non-blocking manner just long enough to aquire the serial ports current\/default attributes, but then closes it and creates a reference to the serial port for use within Hammerspoon.  This behavior may change, as I suspect it may cause problems with some Arduino devices with auto-reset enabled.\n * In most cases, you will want to use the calloutDevice for the serial port (see `hs._asm.serial.listPorts`)",
+        "notes" : [
+          " * This constructor does not open the serial port for communications.  It momentarily opens the port in a non-blocking manner just long enough to aquire the serial ports current\/default attributes, but then closes it and creates a reference to the serial port for use within Hammerspoon.  This behavior may change, as I suspect it may cause problems with some Arduino devices with auto-reset enabled.",
+          " * In most cases, you will want to use the calloutDevice for the serial port (see `hs._asm.serial.listPorts`)"
+        ],
+        "signature" : "hs._asm.serial.port(path) -> serialPortObject",
+        "type" : "Constructor",
+        "returns" : [
+          " * the serial port object",
+          ""
+        ],
+        "def" : "hs._asm.serial.port(path) -> serialPortObject",
+        "name" : "port"
+      },
+      {
+        "desc" : "Set the DTR high or low",
+        "stripped_doc" : [
+          "Set the DTR high or low",
+          ""
+        ],
+        "parameters" : [
+          " * state - a boolean indicating if the DTR should be set high (true) or low (false)",
+          ""
+        ],
+        "doc" : "Set the DTR high or low\n\nParameters:\n * state - a boolean indicating if the DTR should be set high (true) or low (false)\n\nReturns:\n * the serial port object",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:DTR(state) -> serialPortObject",
+        "type" : "Method",
+        "returns" : [
+          " * the serial port object"
+        ],
+        "def" : "hs._asm.serial:DTR(state) -> serialPortObject",
+        "name" : "DTR"
+      },
+      {
+        "desc" : "Change the current baud rate for the serial port",
+        "stripped_doc" : [
+          "Change the current baud rate for the serial port",
+          ""
+        ],
+        "parameters" : [
+          " * rate - the new baud rate to set for the serial port",
+          ""
+        ],
+        "doc" : "Change the current baud rate for the serial port\n\nParameters:\n * rate - the new baud rate to set for the serial port\n\nReturns:\n * the serial port object\n\nNotes:\n * if the serial port is currently open, this method attempts to change the baud rate immediately; otherwise the change will be applied when the serial port is opened with `hs._asm.serial:open`.\n * need to find out if this resets the serial port on error like the example suggests but I can't find documented anywhere",
+        "notes" : [
+          " * if the serial port is currently open, this method attempts to change the baud rate immediately; otherwise the change will be applied when the serial port is opened with `hs._asm.serial:open`.",
+          " * need to find out if this resets the serial port on error like the example suggests but I can't find documented anywhere"
+        ],
+        "signature" : "hs._asm.serial:baud(rate) -> serialPortObject",
+        "type" : "Method",
+        "returns" : [
+          " * the serial port object",
+          ""
+        ],
+        "def" : "hs._asm.serial:baud(rate) -> serialPortObject",
+        "name" : "baud"
+      },
+      {
+        "desc" : "Returns the number of bytes currently in the serial port's receive buffer.",
+        "stripped_doc" : [
+          "Returns the number of bytes currently in the serial port's receive buffer.",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Returns the number of bytes currently in the serial port's receive buffer.\n\nParameters:\n * None\n\nReturns:\n * the number of bytes currently in the receive buffer",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:bufferSize() -> integer",
+        "type" : "Method",
+        "returns" : [
+          " * the number of bytes currently in the receive buffer"
+        ],
+        "def" : "hs._asm.serial:bufferSize() -> integer",
+        "name" : "bufferSize"
+      },
+      {
+        "desc" : "Close and release the serial port",
+        "stripped_doc" : [
+          "Close and release the serial port",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Close and release the serial port\n\nParameters:\n * None\n\nReturns:\n * None\n\nNotes:\n * If the port is already closed, this method does nothing.\n * This method is automatically called during garbage collection (most notably when your Hammerspoon configuration is reloaded or Hammerspoon is quit.)",
+        "notes" : [
+          " * If the port is already closed, this method does nothing.",
+          " * This method is automatically called during garbage collection (most notably when your Hammerspoon configuration is reloaded or Hammerspoon is quit.)"
+        ],
+        "signature" : "hs._asm.serial:close() -> nil",
+        "type" : "Method",
+        "returns" : [
+          " * None",
+          ""
+        ],
+        "def" : "hs._asm.serial:close() -> nil",
+        "name" : "close"
+      },
+      {
+        "desc" : "Get or set the serial port's character data size in bits.",
+        "stripped_doc" : [
+          "Get or set the serial port's character data size in bits.",
+          ""
+        ],
+        "parameters" : [
+          "  * bits - an optional integer between 5 and 8 inclusive specifying the serial port's character data size in bits.",
+          ""
+        ],
+        "doc" : "Get or set the serial port's character data size in bits.\n\nParameters:\n  * bits - an optional integer between 5 and 8 inclusive specifying the serial port's character data size in bits.\n\nReturns:\n  * the serial port object if a bit size is specified, otherwise, the current setting\n\nNotes:\n  * the data bit size does not include the parity (if any) or stop bits.",
+        "notes" : [
+          "  * the data bit size does not include the parity (if any) or stop bits."
+        ],
+        "signature" : "hs._asm.serial:dataBits([bits]) -> serialPortObject | integer",
+        "type" : "Method",
+        "returns" : [
+          "  * the serial port object if a bit size is specified, otherwise, the current setting",
+          ""
+        ],
+        "def" : "hs._asm.serial:dataBits([bits]) -> serialPortObject | integer",
+        "name" : "dataBits"
+      },
+      {
+        "desc" : "Get or set whether or not a callback should occur when incoming data is detected from the serial port",
+        "stripped_doc" : [
+          "Get or set whether or not a callback should occur when incoming data is detected from the serial port",
+          ""
+        ],
+        "parameters" : [
+          " * flag - an optional boolean flag indicating whether or not incoming data should trigger the registered callback function.",
+          ""
+        ],
+        "doc" : "Get or set whether or not a callback should occur when incoming data is detected from the serial port\n\nParameters:\n * flag - an optional boolean flag indicating whether or not incoming data should trigger the registered callback function.\n\nReturns:\n * If a value is specified, then this method returns the serial port object.  Otherwise this method returns the current value.",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:enableCallback([flag]) -> serialPortObject | state",
+        "type" : "Method",
+        "returns" : [
+          " * If a value is specified, then this method returns the serial port object.  Otherwise this method returns the current value."
+        ],
+        "def" : "hs._asm.serial:enableCallback([flag]) -> serialPortObject | state",
+        "name" : "enableCallback"
+      },
+      {
+        "desc" : "Returns which control mode flags are set for the serial port.",
+        "stripped_doc" : [
+          "Returns which control mode flags are set for the serial port.",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Returns which control mode flags are set for the serial port.\n\nParameters:\n * None\n\nReturns:\n * a string with the names of the control mode flags which are set for the serial port",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:expandCflag() -> string",
+        "type" : "Method",
+        "returns" : [
+          " * a string with the names of the control mode flags which are set for the serial port"
+        ],
+        "def" : "hs._asm.serial:expandCflag() -> string",
+        "name" : "expandCflag"
+      },
+      {
+        "desc" : "Returns which input mode flags are set for the serial port.",
+        "stripped_doc" : [
+          "Returns which input mode flags are set for the serial port.",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Returns which input mode flags are set for the serial port.\n\nParameters:\n * None\n\nReturns:\n * a string with the names of the input mode flags which are set for the serial port",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:expandIflag() -> string",
+        "type" : "Method",
+        "returns" : [
+          " * a string with the names of the input mode flags which are set for the serial port"
+        ],
+        "def" : "hs._asm.serial:expandIflag() -> string",
+        "name" : "expandIflag"
+      },
+      {
+        "desc" : "Returns which local mode flags are set for the serial port.",
+        "stripped_doc" : [
+          "Returns which local mode flags are set for the serial port.",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Returns which local mode flags are set for the serial port.\n\nParameters:\n * None\n\nReturns:\n * a string with the names of the local mode flags which are set for the serial port\nNotes:\n  * The names are consistent with those found in `hs._asm.serial.attributeFlags`",
+        "notes" : [
+          "  * The names are consistent with those found in `hs._asm.serial.attributeFlags`"
+        ],
+        "signature" : "hs._asm.serial:expandLflag() -> string",
+        "type" : "Method",
+        "returns" : [
+          " * a string with the names of the local mode flags which are set for the serial port"
+        ],
+        "def" : "hs._asm.serial:expandLflag() -> string",
+        "name" : "expandLflag"
+      },
+      {
+        "desc" : "Returns which output mode flags are set for the serial port.",
+        "stripped_doc" : [
+          "Returns which output mode flags are set for the serial port.",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Returns which output mode flags are set for the serial port.\n\nParameters:\n * None\n\nReturns:\n * a string with the names of the output mode flags which are set for the serial port",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:expandOflag() -> string",
+        "type" : "Method",
+        "returns" : [
+          " * a string with the names of the output mode flags which are set for the serial port"
+        ],
+        "def" : "hs._asm.serial:expandOflag() -> string",
+        "name" : "expandOflag"
+      },
+      {
+        "desc" : "Dumps all data currently waiting in the incoming data buffer.",
+        "stripped_doc" : [
+          "Dumps all data currently waiting in the incoming data buffer.",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Dumps all data currently waiting in the incoming data buffer.\n\nParameters:\n * None\n\nReturns:\n * the serial port object",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:flushBuffer() -> serialPortObject",
+        "type" : "Method",
+        "returns" : [
+          " * the serial port object"
+        ],
+        "def" : "hs._asm.serial:flushBuffer() -> serialPortObject",
+        "name" : "flushBuffer"
+      },
+      {
+        "desc" : "Get the serial port's termios structure and return it in table form.  This is used internally and provided for advanced serial port manipulation.  It is not expected that you will require this method for most serial port usage requirements.",
+        "stripped_doc" : [
+          "Get the serial port's termios structure and return it in table form.  This is used internally and provided for advanced serial port manipulation.  It is not expected that you will require this method for most serial port usage requirements.",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Get the serial port's termios structure and return it in table form.  This is used internally and provided for advanced serial port manipulation.  It is not expected that you will require this method for most serial port usage requirements.\n\nParameters:\n * None\n\nReturns:\n * a table containing the following keys:\n   * iflag  - bit flag representing the input modes for the termios structure\n   * oflag  - bit flag representing the output modes for the termios structure\n   * cflag  - bit flag representing the control modes for the termios structure\n   * lflag  - bit flag representing the local modes for the termios structure\n   * ispeed - input speed\n   * ospeed - output speed\n   * cc     - array of control characters which have special meaning under certain conditions\n\nNotes:\n * If the serial port is currently open, this method will query the port for its current settings; otherwise, the settings which are to be applied when the port is opened with `hs._asm.serial:open` are provided.\n * The baud rate for the serial port is set via ioctl with the IOSSIOSPEED request to allow a wider range of values than termios directly supports.  `ispeed` and `ospeed` may not be an accurate measure of the actual baud rate currently in effect.",
+        "notes" : [
+          " * If the serial port is currently open, this method will query the port for its current settings; otherwise, the settings which are to be applied when the port is opened with `hs._asm.serial:open` are provided.",
+          " * The baud rate for the serial port is set via ioctl with the IOSSIOSPEED request to allow a wider range of values than termios directly supports.  `ispeed` and `ospeed` may not be an accurate measure of the actual baud rate currently in effect."
+        ],
+        "signature" : "hs._asm.serial:getAttributes() -> termiosTable",
+        "type" : "Method",
+        "returns" : [
+          " * a table containing the following keys:",
+          "   * iflag  - bit flag representing the input modes for the termios structure",
+          "   * oflag  - bit flag representing the output modes for the termios structure",
+          "   * cflag  - bit flag representing the control modes for the termios structure",
+          "   * lflag  - bit flag representing the local modes for the termios structure",
+          "   * ispeed - input speed",
+          "   * ospeed - output speed",
+          "   * cc     - array of control characters which have special meaning under certain conditions",
+          ""
+        ],
+        "def" : "hs._asm.serial:getAttributes() -> termiosTable",
+        "name" : "getAttributes"
+      },
+      {
+        "desc" : "Get or set whether or not hardware (RTSCTS) flow control is enable for the serial port",
+        "stripped_doc" : [
+          "Get or set whether or not hardware (RTSCTS) flow control is enable for the serial port",
+          ""
+        ],
+        "parameters" : [
+          " * an optional boolean parameter indicating if hardware flow control should be enabled for the serial port",
+          ""
+        ],
+        "doc" : "Get or set whether or not hardware (RTSCTS) flow control is enable for the serial port\n\nParameters:\n * an optional boolean parameter indicating if hardware flow control should be enabled for the serial port\n\nReturns:\n * if a value was provided, then the serial port object is returned; otherwise the current value is returned\n\nNotes:\n * This method only manages RTSCTS hardware flow control as this is the most commonly supported.  By adjusting the serial port attributes directly, DTRDSR hardware flow control and DCDOutputFlowControl may also be available if your device or driver support them.\n * This method turns hardware flow control fully on or fully off (i.e. bi-directional).  If you have manipulated the serial port attributes directly, it is possible that hardware flow control may be only partially enabled - using this method to check on flow control status (i.e. without providing a boolean parameter) will report this condition as false since at least one direction of communication doesn not have hardware flow control enabled.",
+        "notes" : [
+          " * This method only manages RTSCTS hardware flow control as this is the most commonly supported.  By adjusting the serial port attributes directly, DTRDSR hardware flow control and DCDOutputFlowControl may also be available if your device or driver support them.",
+          " * This method turns hardware flow control fully on or fully off (i.e. bi-directional).  If you have manipulated the serial port attributes directly, it is possible that hardware flow control may be only partially enabled - using this method to check on flow control status (i.e. without providing a boolean parameter) will report this condition as false since at least one direction of communication doesn not have hardware flow control enabled."
+        ],
+        "signature" : "hs._asm.serial:hardwareFlowControl([state]) -> serialPortObject | boolean",
+        "type" : "Method",
+        "returns" : [
+          " * if a value was provided, then the serial port object is returned; otherwise the current value is returned",
+          ""
+        ],
+        "def" : "hs._asm.serial:hardwareFlowControl([state]) -> serialPortObject | boolean",
+        "name" : "hardwareFlowControl"
+      },
+      {
+        "desc" : "Set or clear a callback function for incoming data",
+        "stripped_doc" : [
+          "Set or clear a callback function for incoming data",
+          ""
+        ],
+        "parameters" : [
+          " * fn - a function to callback when incoming data is detected.  If an explicit nil value is given, remove any existing callback function.  The function should expect two parameters, the serialPortObject and the incoming buffer contents as a lua string, and return one result: True if the callback should remain active for additional incoming data or false if it should not.",
+          ""
+        ],
+        "doc" : "Set or clear a callback function for incoming data\n\nParameters:\n * fn - a function to callback when incoming data is detected.  If an explicit nil value is given, remove any existing callback function.  The function should expect two parameters, the serialPortObject and the incoming buffer contents as a lua string, and return one result: True if the callback should remain active for additional incoming data or false if it should not.\n\nReturns:\n * the serial port object\n\nNotes:\n * Data passed to the callback function is not guaranteed to be valid UTF8 or even complete.  You may need to perform additional reads with `hs._asm.serial:readBuffer` or cache data for an additional callback to get the full results.  See also `hs._asm.serial:bufferSize`.\n\n * This does not enable the callback function, it merely attaches it to this serial port.  See `hs._asm.serial:enableCallback` for more information.\n * If the callback function is currently enabled and this method is used to assign a new callback function, there is a small window where data may be buffered, but will not invoke a callback.  This buffered data will be included in the next callback invocation or can be manually retrieved with `hs._asm.serial:readBuffer`.\n * If the callback function is currently enabled and this method is used to remove the existing callback, the enable state will be set to false.",
+        "notes" : [
+          " * Data passed to the callback function is not guaranteed to be valid UTF8 or even complete.  You may need to perform additional reads with `hs._asm.serial:readBuffer` or cache data for an additional callback to get the full results.  See also `hs._asm.serial:bufferSize`.",
+          "",
+          " * This does not enable the callback function, it merely attaches it to this serial port.  See `hs._asm.serial:enableCallback` for more information.",
+          " * If the callback function is currently enabled and this method is used to assign a new callback function, there is a small window where data may be buffered, but will not invoke a callback.  This buffered data will be included in the next callback invocation or can be manually retrieved with `hs._asm.serial:readBuffer`.",
+          " * If the callback function is currently enabled and this method is used to remove the existing callback, the enable state will be set to false."
+        ],
+        "signature" : "hs._asm.serial:incomingDataCallback(fn) -> serialPortObject",
+        "type" : "Method",
+        "returns" : [
+          " * the serial port object",
+          ""
+        ],
+        "def" : "hs._asm.serial:incomingDataCallback(fn) -> serialPortObject",
+        "name" : "incomingDataCallback"
+      },
+      {
+        "desc" : "Returns a boolean value indicating whether or not the serial port is currently open",
+        "stripped_doc" : [
+          "Returns a boolean value indicating whether or not the serial port is currently open",
+          ""
+        ],
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "doc" : "Returns a boolean value indicating whether or not the serial port is currently open\n\nParameters:\n * None\n\nReturns:\n * True if the serial port is currently open or false if it is not.",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:isOpen() -> boolean",
+        "type" : "Method",
+        "returns" : [
+          " * True if the serial port is currently open or false if it is not."
+        ],
+        "def" : "hs._asm.serial:isOpen() -> boolean",
+        "name" : "isOpen"
+      },
+      {
+        "desc" : "Set or clear a callback function for a lost serial port connection",
+        "stripped_doc" : [
+          "Set or clear a callback function for a lost serial port connection",
+          ""
+        ],
+        "parameters" : [
+          " * fn - a function to callback when the serial port is unexpectedly lost.  If an explicit nil value is given, remove any existing callback function.  The function should expect two parameters, the serialPortObject and a string containing the error message (if any). The function should not return a value.",
+          ""
+        ],
+        "doc" : "Set or clear a callback function for a lost serial port connection\n\nParameters:\n * fn - a function to callback when the serial port is unexpectedly lost.  If an explicit nil value is given, remove any existing callback function.  The function should expect two parameters, the serialPortObject and a string containing the error message (if any). The function should not return a value.\n\nReturns:\n * the serial port object\n\nNotes:\n * If no callback function is defined, a notification is posted via `hs.showError` when a lost serial port connection is detected.\n * This function will not be called if the port exits normally; for example because of calling `hs._asm.serial:close` or due to garbage collection (Hammerspoon reloading or termination)",
+        "notes" : [
+          " * If no callback function is defined, a notification is posted via `hs.showError` when a lost serial port connection is detected.",
+          " * This function will not be called if the port exits normally; for example because of calling `hs._asm.serial:close` or due to garbage collection (Hammerspoon reloading or termination)"
+        ],
+        "signature" : "hs._asm.serial:lostPortCallback(fn) -> serialPortObject",
+        "type" : "Method",
+        "returns" : [
+          " * the serial port object",
+          ""
+        ],
+        "def" : "hs._asm.serial:lostPortCallback(fn) -> serialPortObject",
+        "name" : "lostPortCallback"
+      },
+      {
+        "desc" : "Get or set the serial port's parity type.",
+        "stripped_doc" : [
+          "Get or set the serial port's parity type.",
+          ""
+        ],
+        "parameters" : [
+          "  * type - an optional string indicating the type of parity to use for error detection.  Recognized values are:",
+          "    * N or None - No parity: do not use parity for error detection",
+          "    * E or Even - Use even parity",
+          "    * O or Odd  - Use odd parity",
+          ""
+        ],
+        "doc" : "Get or set the serial port's parity type.\n\nParameters:\n  * type - an optional string indicating the type of parity to use for error detection.  Recognized values are:\n    * N or None - No parity: do not use parity for error detection\n    * E or Even - Use even parity\n    * O or Odd  - Use odd parity\n\nReturns:\n  * the serial port object if a parity setting is specified, otherwise, the current setting",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:parity([type]) -> serialPortObject | string",
+        "type" : "Method",
+        "returns" : [
+          "  * the serial port object if a parity setting is specified, otherwise, the current setting"
+        ],
+        "def" : "hs._asm.serial:parity([type]) -> serialPortObject | string",
+        "name" : "parity"
+      },
+      {
+        "desc" : "Reads the incoming serial buffer.  If bytes is specified, only read up to that many bytes; otherwise everything currently in the incoming buffer is read.",
+        "stripped_doc" : [
+          "Reads the incoming serial buffer.  If bytes is specified, only read up to that many bytes; otherwise everything currently in the incoming buffer is read.",
+          ""
+        ],
+        "parameters" : [
+          " * bytes - an optional integer defining how many bytes to read.  If it is not present, the entire buffer is returned.",
+          ""
+        ],
+        "doc" : "Reads the incoming serial buffer.  If bytes is specified, only read up to that many bytes; otherwise everything currently in the incoming buffer is read.\n\nParameters:\n * bytes - an optional integer defining how many bytes to read.  If it is not present, the entire buffer is returned.\n\nReturns:\n * a string containing the specified contents of the read buffer\n\nNotes:\n * Data returned by this method is not guaranteed to be valid UTF8 or even complete.  You may need to perform additional reads or cache data for a later check to get full results.  See also `hs._asm.serial:bufferSize`.\n\n * This method will clear the current incoming buffer of the data it returns.  Cache the data if you need to keep a record.\n * This method will return nil if the buffer is currently empty.\n\n * This method can be called even if the serial port is closed (even if closed unexpectedly), though no new data will arrive unless the port is re-opened.",
+        "notes" : [
+          " * Data returned by this method is not guaranteed to be valid UTF8 or even complete.  You may need to perform additional reads or cache data for a later check to get full results.  See also `hs._asm.serial:bufferSize`.",
+          "",
+          " * This method will clear the current incoming buffer of the data it returns.  Cache the data if you need to keep a record.",
+          " * This method will return nil if the buffer is currently empty.",
+          "",
+          " * This method can be called even if the serial port is closed (even if closed unexpectedly), though no new data will arrive unless the port is re-opened."
+        ],
+        "signature" : "hs._asm.serial:readBuffer([bytes]) -> string",
+        "type" : "Method",
+        "returns" : [
+          " * a string containing the specified contents of the read buffer",
+          ""
+        ],
+        "def" : "hs._asm.serial:readBuffer([bytes]) -> string",
+        "name" : "readBuffer"
+      },
+      {
+        "desc" : "Set the serial port's termios structure To the values specified in the provided table.  This is used internally and provided for advanced serial port manipulation.  It is not expected that you will require this method for most serial port usage requirements.",
+        "stripped_doc" : [
+          "Set the serial port's termios structure To the values specified in the provided table.  This is used internally and provided for advanced serial port manipulation.  It is not expected that you will require this method for most serial port usage requirements.",
+          ""
+        ],
+        "parameters" : [
+          " * termiosTable - a table containing the following keys:",
+          "   * iflag  - bit flag representing the input modes for the termios structure",
+          "   * oflag  - bit flag representing the output modes for the termios structure",
+          "   * cflag  - bit flag representing the control modes for the termios structure",
+          "   * lflag  - bit flag representing the local modes for the termios structure",
+          "   * ispeed - input speed",
+          "   * ospeed - output speed",
+          "   * cc     - array of control characters which have special meaning under certain conditions",
+          " * action - an action flag from `hs._asm.serial.attributeFlags.action` specifying when to apply the new termios values",
+          ""
+        ],
+        "doc" : "Set the serial port's termios structure To the values specified in the provided table.  This is used internally and provided for advanced serial port manipulation.  It is not expected that you will require this method for most serial port usage requirements.\n\nParameters:\n * termiosTable - a table containing the following keys:\n   * iflag  - bit flag representing the input modes for the termios structure\n   * oflag  - bit flag representing the output modes for the termios structure\n   * cflag  - bit flag representing the control modes for the termios structure\n   * lflag  - bit flag representing the local modes for the termios structure\n   * ispeed - input speed\n   * ospeed - output speed\n   * cc     - array of control characters which have special meaning under certain conditions\n * action - an action flag from `hs._asm.serial.attributeFlags.action` specifying when to apply the new termios values\n\nReturns:\n * the serial port object\n\nNotes:\n * If the serial port is currently open, this method will try to apply the settings immediately; otherwise the settings will be saved until the serial port is opened with `hs._asm.serial:open`.\n * Not all possible modes in iflag, oflag, cflag, and lflag are valid for all serial devices or drivers.\n * The ispeed and ospeed values should not be adjusted -- use the `hs._asm.serial:baud` method to set the serial port baud rate as it allows for a wider range of speeds than termios directly supports.\n * It is expected that this method will be called after making changes to the results provided by `hs._asm.serial:getAttributes`.",
+        "notes" : [
+          " * If the serial port is currently open, this method will try to apply the settings immediately; otherwise the settings will be saved until the serial port is opened with `hs._asm.serial:open`.",
+          " * Not all possible modes in iflag, oflag, cflag, and lflag are valid for all serial devices or drivers.",
+          " * The ispeed and ospeed values should not be adjusted -- use the `hs._asm.serial:baud` method to set the serial port baud rate as it allows for a wider range of speeds than termios directly supports.",
+          " * It is expected that this method will be called after making changes to the results provided by `hs._asm.serial:getAttributes`."
+        ],
+        "signature" : "hs._asm.serial:setAttributes(termiosTable, action) -> serialPortObject",
+        "type" : "Method",
+        "returns" : [
+          " * the serial port object",
+          ""
+        ],
+        "def" : "hs._asm.serial:setAttributes(termiosTable, action) -> serialPortObject",
+        "name" : "setAttributes"
+      },
+      {
+        "desc" : "Get or set whether or not software flow control is enable for the serial port",
+        "stripped_doc" : [
+          "Get or set whether or not software flow control is enable for the serial port",
+          ""
+        ],
+        "parameters" : [
+          " * an optional boolean parameter indicating if software flow control should be enabled for the serial port",
+          ""
+        ],
+        "doc" : "Get or set whether or not software flow control is enable for the serial port\n\nParameters:\n * an optional boolean parameter indicating if software flow control should be enabled for the serial port\n\nReturns:\n * if a value was provided, then the serial port object is returned; otherwise the current value is returned\n\nNotes:\n * This method turns software flow control fully on or fully off (i.e. bi-directional).  If you have manipulated the serial port attributes directly, it is possible that software flow control may be only partially enabled - using this method to check on flow control status (i.e. without providing a boolean parameter) will report this condition as false since at least one direction of communication doesn not have software flow control enabled.",
+        "notes" : [
+          " * This method turns software flow control fully on or fully off (i.e. bi-directional).  If you have manipulated the serial port attributes directly, it is possible that software flow control may be only partially enabled - using this method to check on flow control status (i.e. without providing a boolean parameter) will report this condition as false since at least one direction of communication doesn not have software flow control enabled."
+        ],
+        "signature" : "hs._asm.serial:softwareFlowControl([state]) -> serialPortObject | boolean",
+        "type" : "Method",
+        "returns" : [
+          " * if a value was provided, then the serial port object is returned; otherwise the current value is returned",
+          ""
+        ],
+        "def" : "hs._asm.serial:softwareFlowControl([state]) -> serialPortObject | boolean",
+        "name" : "softwareFlowControl"
+      },
+      {
+        "desc" : "Get or set the serial port's number of stop bits.",
+        "stripped_doc" : [
+          "Get or set the serial port's number of stop bits.",
+          ""
+        ],
+        "parameters" : [
+          "  * bits - an optional integer between 1 and 2 inclusive specifying the serial port's number of stop bits.",
+          ""
+        ],
+        "doc" : "Get or set the serial port's number of stop bits.\n\nParameters:\n  * bits - an optional integer between 1 and 2 inclusive specifying the serial port's number of stop bits.\n\nReturns:\n  * the serial port object if a bit size is specified, otherwise, the current setting",
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.serial:stopBits([bits]) -> serialPortObject | integer",
+        "type" : "Method",
+        "returns" : [
+          "  * the serial port object if a bit size is specified, otherwise, the current setting"
+        ],
+        "def" : "hs._asm.serial:stopBits([bits]) -> serialPortObject | integer",
+        "name" : "stopBits"
+      },
+      {
+        "desc" : "Triggers the reset process for an Arduino UNO (and similar) by setting the DTR high for `delay` microseconds and then pulling it low.",
+        "stripped_doc" : [
+          "Triggers the reset process for an Arduino UNO (and similar) by setting the DTR high for `delay` microseconds and then pulling it low.",
+          ""
+        ],
+        "parameters" : [
+          " * delay - an optional parameter indicating how long in microseconds the DTR should be held high.  Defaults to 100000 microseconds (1\/10 of a second).",
+          ""
+        ],
+        "doc" : "Triggers the reset process for an Arduino UNO (and similar) by setting the DTR high for `delay` microseconds and then pulling it low.\n\nParameters:\n * delay - an optional parameter indicating how long in microseconds the DTR should be held high.  Defaults to 100000 microseconds (1\/10 of a second).\n\nReturns:\n * the serial port object\n\nNotes:\n * the delay is performed via `hs.timer.usleep` and is blocking, so it should be kept as short as necessary.  My experience is that 100000 microseconds is sufficient, but the parameter is provided if circumstances require another value.",
+        "notes" : [
+          " * the delay is performed via `hs.timer.usleep` and is blocking, so it should be kept as short as necessary.  My experience is that 100000 microseconds is sufficient, but the parameter is provided if circumstances require another value."
+        ],
+        "signature" : "hs._asm.serial:unoReset([delay]) -> serialPortObject",
+        "type" : "Method",
+        "returns" : [
+          " * the serial port object",
+          ""
+        ],
+        "def" : "hs._asm.serial:unoReset([delay]) -> serialPortObject",
+        "name" : "unoReset"
+      },
+      {
+        "desc" : "Write the specified data to the serial port.",
+        "stripped_doc" : [
+          "Write the specified data to the serial port.",
+          ""
+        ],
+        "parameters" : [
+          " * data - the data to send to the serial port.",
+          ""
+        ],
+        "doc" : "Write the specified data to the serial port.\n\nParameters:\n * data - the data to send to the serial port.\n\nReturns:\n * the serial port object\n\nNotes:\n* A number is treated as a string (i.e. 123 will be sent as \"123\").  To send an actual byte value of 123, use `string.char(123)` as the data.",
+        "notes" : [
+          "* A number is treated as a string (i.e. 123 will be sent as \"123\").  To send an actual byte value of 123, use `string.char(123)` as the data."
+        ],
+        "signature" : "hs._asm.serial:write(data) -> serialPortObject",
+        "type" : "Method",
+        "returns" : [
+          " * the serial port object",
+          ""
+        ],
+        "def" : "hs._asm.serial:write(data) -> serialPortObject",
+        "name" : "write"
+      }
+    ],
+    "name" : "hs._asm.serial"
+  }
+]

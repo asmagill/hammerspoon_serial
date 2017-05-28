@@ -14,20 +14,15 @@
 // port command does reset uno; knew open would, hoped port wouldn't, so need to figure out good
 // defaults some other way...
 
-#import <Cocoa/Cocoa.h>
-// #import <Carbon/Carbon.h>
-#import <LuaSkin/LuaSkin.h>
-#import "../hammerspoon.h"
+@import Cocoa ;
+@import LuaSkin ;
 
-// import IOKit headers
-#include <IOKit/IOKitLib.h>
-#include <IOKit/serial/IOSerialKeys.h>
-#include <IOKit/IOBSD.h>
-#include <IOKit/serial/ioss.h>
-#include <sys/ioctl.h>
+@import IOKit ;
+@import IOKit.serial ;
+@import Darwin.POSIX.ioctl ;
 
 #define USERDATA_TAG        "hs._asm.serial"
-int refTable ;
+static int refTable = LUA_NOREF ;
 
 #define get_objectFromUserdata(objType, L, idx) (objType*)*((void**)luaL_checkudata(L, idx, USERDATA_TAG))
 
@@ -104,7 +99,7 @@ int refTable ;
             NSString *fullErrorMessage = [NSString stringWithFormat:@"%s: new: %@ for %@: %s", USERDATA_TAG, errorMessage, _path, strerror(errno)] ;
             if (_serialFileDescriptor != -1) close(_serialFileDescriptor);
             _serialFileDescriptor = -1;
-            luaL_error([[LuaSkin shared] L], (char *)[fullErrorMessage UTF8String]) ;
+            luaL_error([[LuaSkin shared] L], [fullErrorMessage UTF8String]) ;
             return nil ;
         }
     }
@@ -156,7 +151,7 @@ int refTable ;
 
             if (_serialFileDescriptor != -1) close(_serialFileDescriptor);
             _serialFileDescriptor = -1 ;
-            luaL_error([[LuaSkin shared] L], (char *)[fullErrorMessage UTF8String]) ;
+            luaL_error([[LuaSkin shared] L], [fullErrorMessage UTF8String]) ;
             return ;
         }
     }
@@ -214,7 +209,8 @@ int refTable ;
         }
     } ; _bufferChanging = YES ;
         if ([_incomingData length] > 0) {
-            bufferCopy = [_incomingData subdataWithRange:NSMakeRange(0,MIN(chunkSize, [_incomingData length]))] ;
+            NSUInteger incomingLength = [_incomingData length] ;
+            bufferCopy = [_incomingData subdataWithRange:NSMakeRange(0,((chunkSize < incomingLength) ? chunkSize : incomingLength))] ;
             if (chunkSize < [_incomingData length]) {
                 NSData *remainingData = [_incomingData subdataWithRange:NSMakeRange(chunkSize,[_incomingData length] - chunkSize)] ;
                 _incomingData = [remainingData mutableCopy] ;
@@ -281,10 +277,10 @@ int refTable ;
         if (![[LuaSkin shared]  protectedCallAndTraceback:2 nresults:1]) {
             const char *errorMsg = lua_tostring([[LuaSkin shared] L], -1);
             lua_pop([[LuaSkin shared] L], 1) ;
-            showError([[LuaSkin shared] L], (char *)[[NSString stringWithFormat:@"%s: lost port %@: %s, callback error: %s", USERDATA_TAG, _path, strerror([errorNumber intValue]), errorMsg] UTF8String]);
+            [LuaSkin logError:[NSString stringWithFormat:@"%s: lost port %@: %s, callback error: %s", USERDATA_TAG, _path, strerror([errorNumber intValue]), errorMsg]] ;
         }
     } else {
-        showError([[LuaSkin shared] L], (char *)[[NSString stringWithFormat:@"%s: lost port %@: %s", USERDATA_TAG, _path, strerror([errorNumber intValue])] UTF8String]);
+        [LuaSkin logError:[NSString stringWithFormat:@"%s: lost port %@: %s", USERDATA_TAG, _path, strerror([errorNumber intValue])]] ;
     }
 }
 
@@ -297,7 +293,7 @@ int refTable ;
 
         if (![[LuaSkin shared]  protectedCallAndTraceback:2 nresults:1]) {
             const char *errorMsg = lua_tostring([[LuaSkin shared] L], -1);
-            showError([[LuaSkin shared] L], (char *)[[NSString stringWithFormat:@"%s: callback error for port %@: %s", USERDATA_TAG, _path, errorMsg] UTF8String]);
+            [LuaSkin logError:[NSString stringWithFormat:@"%s: callback error for port %@: %s", USERDATA_TAG, _path, errorMsg]] ;
         } else {
             _notifyMainThread = (BOOL)lua_toboolean([[LuaSkin shared] L], -1) ;
         }
@@ -314,8 +310,9 @@ int refTable ;
         _readThreadRunning = YES;
         _myChildThread = [NSThread currentThread] ;
 
-        const int     BUFFER_SIZE = 512;
-        unsigned char byte_buffer[BUFFER_SIZE]; // buffer for holding incoming data
+        const size_t  BUFFER_SIZE = 512;
+        unsigned char *byte_buffer = malloc(BUFFER_SIZE * sizeof(unsigned char)) ;
+//         unsigned char byte_buffer[BUFFER_SIZE]; // buffer for holding incoming data
         ssize_t       numBytes=0; // number of bytes read during read
 
         // assign a high priority to this thread
@@ -342,7 +339,7 @@ int refTable ;
                     close(_serialFileDescriptor);
                     _serialFileDescriptor = -1;
 
-                    CLS_NSLOG(@"%s: port %@ unexpectedly died: %s", USERDATA_TAG, _path, strerror(errno)) ;
+                    [LuaSkin logError:[NSString stringWithFormat:@"%s: port %@ unexpectedly died: %s", USERDATA_TAG, _path, strerror(errno)]] ;
                     [self performSelectorOnMainThread:@selector(lostPortNotification:)
                                            withObject:[NSNumber numberWithInt:errno]
                                         waitUntilDone:NO];
@@ -351,6 +348,7 @@ int refTable ;
             }
         }
 
+        free(byte_buffer) ;
         // mark that the thread has quit
         _readThreadRunning = NO;
     }
@@ -1158,10 +1156,7 @@ static luaL_Reg moduleLib[] = {
 // };
 
 // NOTE: ** Make sure to change luaopen_..._internal **
-int luaopen_hs__asm_serial_internal(lua_State* __unused L) {
-// Use this if your module doesn't have a module specific object that it returns.
-//    refTable = [[LuaSkin shared] registerLibrary:moduleLib metaFunctions:nil] ; // or module_metaLib
-// Use this some of your functions return or act on a specific object unique to this module
+int luaopen_hs__asm_serial_internal(lua_State* L) {
     refTable = [[LuaSkin shared] registerLibraryWithObject:USERDATA_TAG
                                                  functions:moduleLib
                                              metaFunctions:nil    // or module_metaLib
