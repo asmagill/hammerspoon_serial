@@ -1,3 +1,7 @@
+***Archiving because `hs.serial` now provided by Hammerspoon and is being maintained while this hasn't been touched in ages.***
+
+- - -
+
 hs._asm.serial
 ==============
 
